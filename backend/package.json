@@ -1,0 +1,36 @@
+{
+  "name": "@english/backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/backend/src/server.js",
+    "db:migrate": "tsx src/scripts/migrate.ts",
+    "db:check": "tsx src/scripts/check-db.ts",
+    "db:seed": "tsx src/scripts/seed.ts",
+    "setup:user": "tsx src/scripts/user.ts",
+    "bootstrap:local": "tsx src/scripts/bootstrap-local.ts",
+    "test": "node --import tsx --test tests/unit.test.ts tests/ai-client.test.ts tests/exam-rules.test.ts",
+    "test:integration": "node --import tsx --test tests/integration.test.ts"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "mysql2": "^3.15.0",
+    "zod": "^4.1.0",
+    "dotenv": "^17.2.0",
+    "cookie-parser": "^1.4.7",
+    "helmet": "^8.1.0",
+    "express-rate-limit": "^8.1.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "tsx": "^4.20.0",
+    "supertest": "^7.1.0",
+    "@types/supertest": "^6.0.3",
+    "@types/express": "^5.0.3",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/node": "^24.0.0"
+  }
+}

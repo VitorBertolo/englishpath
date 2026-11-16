@@ -1,0 +1,433 @@
+import { CG as G, C, O, T, X, B, build } from "./helpers.js";
+export const continuousLessons = [
+  {
+    id: 13,
+    module_id: 5,
+    position: 13,
+    title: "Present Continuous: o que acontece agora",
+    objective:
+      "Combinar o To Be que você conhece com verbos em -ing para descrever ações em andamento.",
+    explanation:
+      "Você já sabe I am e she is. Para descrever uma ação em andamento, junte am/is/are ao verbo com -ing: I am working now; she is reading. Use I am; he/she/it is; you/we/they are. Não omita nenhuma das duas partes: We are studying, e não We studying ou We are study. O -s da terceira pessoa não aparece no verbo em -ing.\n\nEm geral, acrescente -ing: work → working, read → reading. Verbos terminados em e mudo perdem esse e: make → making, write → writing. Alguns verbos curtos dobram a consoante final: run → running, sit → sitting, stop → stopping. Lie vira lying. Aprenda as formas junto com seu uso.\n\nNow = agora; right now = agora mesmo; at the moment = neste momento. O contexto pode indicar uma ação em andamento no período atual, mesmo que não ocorra neste exato segundo: I am studying English this month. Aqui começamos com ações observáveis. Contrações continuam possíveis: I'm reading; she's cooking; they're working.",
+    examples: [
+      "I am reading now. → Estou lendo agora.",
+      "She is making lunch. → Ela está preparando o almoço.",
+      "They are running in the park. → Eles estão correndo no parque.",
+      "We are studying English this month. → Estamos estudando inglês neste mês.",
+    ],
+    skills: [
+      "Am/is/are + verbo em -ing",
+      "Grafia de -ing e descrição de ações",
+    ],
+  },
+  {
+    id: 14,
+    module_id: 5,
+    position: 14,
+    title: "Present Continuous: negativas e perguntas",
+    objective:
+      "Negar ações em andamento, perguntar sobre elas e responder de forma curta.",
+    explanation:
+      "Você já aprendeu a negar e inverter To Be. Aplique a mesma estrutura ao Present Continuous: She is not working; Is she working? Não use do/does nessas perguntas ou negativas. A estrutura é sujeito + am/is/are + not + -ing na negativa e Am/Is/Are + sujeito + -ing? na pergunta.\n\nIs not vira isn't; are not vira aren't. Com I, use I am not ou I'm not. Para respostas curtas, repita o pronome e To Be: Yes, I am; No, I'm not; Yes, she is; No, she isn't; Yes, they are; No, they aren't. Não termine uma resposta afirmativa curta com contração: Yes, she's é inadequado.\n\nAo responder a Are you reading?, fale de si: Yes, I am. Para Ana, use she; para um grupo, they. Compare Do you work here? (rotina) com Are you working now? (ação em andamento). Não troque a pessoa nem a ação ao transformar uma frase.",
+    examples: [
+      "She isn't working now. → Ela não está trabalhando agora.",
+      "Are you studying? Yes, I am. → Você está estudando? Sim.",
+      "Is he making lunch? No, he isn't.",
+      "They aren't watching TV. → Eles não estão assistindo à TV.",
+    ],
+    skills: [
+      "Negação e inversão com To Be + -ing",
+      "Respostas curtas no Present Continuous",
+    ],
+  },
+  {
+    id: 15,
+    module_id: 5,
+    position: 15,
+    title: "Rotina ou agora? Simple Present + Continuous",
+    objective:
+      "Escolher o tempo verbal pelo sentido e escrever sobre hábitos e ações em andamento.",
+    explanation:
+      "Simple Present descreve hábitos e fatos: I work every day; she studies at night. Present Continuous descreve ações em andamento: I am working now; she is studying at the moment. Observe o sentido, além dos marcadores: usually/every day costumam acompanhar rotina; now/at the moment costumam acompanhar ação em andamento.\n\nCompare a mesma pessoa em dois contextos: She usually walks to work, but she is taking the bus today. Para negar ou perguntar sobre rotina, use do/does + base. Para uma ação em andamento, use am/is/are, preservando o -ing: Does she work here? Is she working now?\n\nVerbos de estado como like, know, want e have com sentido de possuir normalmente ficam no Simple Present: I like music; she has a bike. Não transforme tudo que acontece no presente em -ing. To Be sozinho ainda descreve estados: I am happy. A expressão have lunch, porém, é uma atividade: I am having lunch.\n\nAgora escreva uma mensagem que combine apresentação, rotina, preferências e o que acontece neste momento. Revise artigos, possessivos, plurais, preposições e horários usando os conteúdos de apoio.",
+    examples: [
+      "I cook every day. I am cooking now.",
+      "She usually walks, but she is taking the bus today.",
+      "Does he study at night? Is he studying now?",
+      "I like tea. I am drinking tea now.",
+    ],
+    skills: [
+      "Contrastar hábito e ação em andamento",
+      "Integração de tempos, marcadores e verbos de estado",
+    ],
+  },
+];
+const rule =
+  "Present Continuous = sujeito + am/is/are + verbo em -ing. Concorde To Be com o sujeito e mantenha as duas partes da estrutura.";
+export const continuousAffirmatives = () =>
+  build(
+    13,
+    [
+      G(
+        "Almoço em preparo",
+        "Agora: I {} cooking. She {} making rice. We {} washing plates. They are {} (eat) outside.",
+        [["am", "is", "are"], "is", ["are", "is", "am"], "eating"],
+        rule,
+      ),
+      O(
+        "Livro novo",
+        "Monte a ação em andamento na biblioteca.",
+        "I am reading a new book now.",
+        rule,
+      ),
+      C(
+        "Cena no parque",
+        "Qual frase descreve as crianças correndo agora?",
+        "The children are running now.",
+        [
+          "The children is running now.",
+          "The children are run now.",
+          "The children running now.",
+        ],
+        rule,
+      ),
+      B(
+        "Mensagem no celular",
+        "Use write com -ing: She is ___ a message.",
+        "writing",
+        "Retire o e final de write e acrescente -ing.",
+      ),
+      G(
+        "Sala de aula",
+        "No momento: The teacher {} speaking. I {} listening. My friends {} writing. We are {} (learn) together.",
+        [["is", "are", "am"], "am", ["are", "is", "am"], "learning"],
+        rule,
+      ),
+      X(
+        "Trabalho remoto",
+        "Eu estou trabalhando em casa agora. Use work at home now.",
+        "I am working at home now.",
+        rule,
+      ),
+      T(
+        "Limpeza da casa",
+        "Reescreva para uma ação em andamento, trocando every Saturday por now: They clean the house every Saturday.",
+        "They are cleaning the house now.",
+        rule,
+      ),
+      C(
+        "Passeio de bicicleta",
+        "O que Rita está fazendo?",
+        "She is riding a bike.",
+        [
+          "She is washing a bike.",
+          "She is cooking lunch.",
+          "She is reading a map.",
+        ],
+        "Riding a bike é a atividade explicitada no texto.",
+        "Rita is riding a bike near the lake. Her brother is walking. Their parents are sitting under a tree.",
+      ),
+      G(
+        "Espera na estação",
+        "Agora: I {} waiting for the train. The driver {} checking the doors. The passengers {} standing. One child is {} (sit) beside me.",
+        [["am", "is", "are"], "is", ["are", "is", "am"], "sitting"],
+        rule,
+      ),
+      O(
+        "Chuva na cidade",
+        "Organize a descrição do tempo agora.",
+        "It is raining in the city now.",
+        rule,
+      ),
+      T(
+        "Forma contraída atual",
+        "Use a contração de They are: They are watching a film now.",
+        "They're watching a film now.",
+        "They are vira They're; watching permanece.",
+        true,
+      ),
+      B(
+        "Exercício no parque",
+        "Use run com -ing: He is ___ near the lake.",
+        "running",
+        "Run dobra o n: running.",
+      ),
+      G(
+        "Oficina criativa",
+        "Neste momento: Ana {} painting. Her cousins {} drawing. I {} making a cup. She is {} (use) blue paint.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "using"],
+        rule,
+      ),
+      X(
+        "Aula de inglês",
+        "Nós estamos estudando inglês neste momento. Use study English at the moment.",
+        "We are studying English at the moment.",
+        rule,
+      ),
+      C(
+        "Estrutura completa",
+        "Qual mensagem usa as duas partes do Present Continuous?",
+        "You are learning new words.",
+        [
+          "You learning new words.",
+          "You are learn new words.",
+          "You is learning new words.",
+        ],
+        rule,
+      ),
+      O(
+        "Cena na cozinha",
+        "Monte a ação dela com make.",
+        "She is making dinner at the moment.",
+        "Make perde o e: making.",
+      ),
+      G(
+        "Arrumação da loja",
+        "Agora: The owner {} opening boxes. His assistants {} carrying books. I {} helping them. A customer is {} (look) at a shelf.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "looking"],
+        rule,
+      ),
+      T(
+        "Verbo sem auxiliar",
+        "Corrija apenas a estrutura: We studying at home now.",
+        "We are studying at home now.",
+        "We precisa do auxiliar are antes de studying.",
+      ),
+      B(
+        "Cadeira do jardim",
+        "Use sit com -ing: My father is ___ in the garden.",
+        "sitting",
+        "Sit dobra a consoante final: sitting.",
+      ),
+      C(
+        "Concordância no singular",
+        "Qual frase descreve o que o gato faz agora?",
+        "The cat is sleeping.",
+        ["The cat are sleeping.", "The cat is sleep.", "The cat sleeping."],
+        rule,
+      ),
+      G(
+        "Limpeza do carro",
+        "Neste momento: He {} washing the car. His sisters {} cleaning the windows. I {} drying a seat. They are {} (work) together.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "working"],
+        rule,
+      ),
+      X(
+        "Passeio a pé",
+        "Eles estão caminhando no parque agora. Use walk in the park now.",
+        "They are walking in the park now.",
+        rule,
+      ),
+      T(
+        "Grafia de make",
+        "Corrija: He is makeing breakfast.",
+        "He is making breakfast.",
+        "Make perde o e antes de -ing.",
+      ),
+      O(
+        "Ajuda no balcão",
+        "Organize o que você está fazendo.",
+        "I am helping a customer right now.",
+        rule,
+      ),
+      G(
+        "Banda ensaiando",
+        "Agora: The singer {} singing. The musicians {} playing. I {} listening. The drummer is {} (practice) a new song.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "practicing"],
+        rule,
+      ),
+      C(
+        "Recado da escola",
+        "Qual atividade acontece no período atual?",
+        "She is studying English this month.",
+        [
+          "She is teaching French this month.",
+          "She is working at a hotel.",
+          "She is reading in the park.",
+        ],
+        "This month indica um período atual de estudo.",
+        "Nara is studying English this month. She usually works in a shop, but she has time for a short course.",
+      ),
+      B(
+        "Parada do ônibus",
+        "Use stop com -ing: The bus is ___ here.",
+        "stopping",
+        "Stop dobra o p: stopping.",
+      ),
+      X(
+        "Roupas no varal",
+        "Ela está lavando as roupas. Use wash the clothes.",
+        "She is washing the clothes.",
+        rule,
+      ),
+      G(
+        "Horta comunitária",
+        "Neste momento: We {} planting vegetables. My uncle {} watering flowers. I {} carrying a bag. Two children are {} (dig) near the gate.",
+        [["are", "is", "am"], "is", ["am", "is", "are"], "digging"],
+        rule,
+      ),
+      T(
+        "Sujeito plural no momento",
+        "Troque apenas He por They: He is reading outside.",
+        "They are reading outside.",
+        "Com they, is passa para are; reading fica igual.",
+      ),
+    ],
+    [
+      G(
+        "Feira de artes",
+        "Agora: The artist {} drawing. The visitors {} watching. I {} taking photos. One boy is {} (make) a card.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "making"],
+        rule,
+      ),
+      G(
+        "Alunos no museu",
+        "Neste momento: We {} looking at a painting. The guide {} talking. I {} writing notes. My friends are {} (listen) carefully.",
+        [["are", "is", "am"], "is", ["am", "is", "are"], "listening"],
+        rule,
+      ),
+      G(
+        "Reparo na bicicleta",
+        "Agora: He {} fixing a wheel. His parents {} waiting. I {} holding a tool. The mechanic is {} (check) the brakes.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "checking"],
+        rule,
+      ),
+      G(
+        "Crianças no quintal",
+        "Agora: They {} running. A girl {} jumping. I {} watching them. Her brother is {} (sit) on a bench.",
+        [["are", "is", "am"], "is", ["am", "is", "are"], "sitting"],
+        rule,
+      ),
+      G(
+        "Cozinha do hotel",
+        "Neste momento: The chef {} mixing rice. We {} preparing lunch. I {} washing cups. His assistant is {} (cut) bread.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "cutting"],
+        rule,
+      ),
+      G(
+        "Chegada ao porto",
+        "Agora: The boat {} moving slowly. People {} carrying bags. I {} looking for my sister. She is {} (wave) at me.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "waving"],
+        rule,
+      ),
+      G(
+        "Estudo em grupo",
+        "No momento: Bia {} reading. We {} answering questions. I {} checking a word. Her cousin is {} (write) a summary.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "writing"],
+        rule,
+      ),
+      G(
+        "Filmagem na praça",
+        "Agora: A man {} filming. The actors {} speaking. I {} standing nearby. A child is {} (run) past us.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "running"],
+        rule,
+      ),
+      G(
+        "Esporte na praia",
+        "Neste momento: We {} playing volleyball. The referee {} watching. I {} serving the ball. The other team is {} (wait) for it.",
+        [["are", "is", "am"], "is", ["am", "is", "are"], "waiting"],
+        rule,
+      ),
+      G(
+        "Sala de informática",
+        "Agora: The students {} using computers. The teacher {} helping. I {} saving my work. The printer is {} (print) a page.",
+        [["are", "is", "am"], "is", ["am", "is", "are"], "printing"],
+        rule,
+      ),
+      G(
+        "Conserto de roupas",
+        "Agora: My aunt {} sewing. Her friends {} choosing fabric. I {} folding shirts. She is {} (make) a dress.",
+        [["is", "are", "am"], "are", ["am", "is", "are"], "making"],
+        rule,
+      ),
+      G(
+        "Visita ao aquário",
+        "Agora: The fish {} swimming. A guide {} explaining the display. I {} taking notes. A girl is {} (look) at a turtle.",
+        [["are", "is", "am"], "is", ["am", "is", "are"], "looking"],
+        rule,
+      ),
+      O(
+        "Mensagem de trabalho",
+        "Monte o aviso sobre o momento atual.",
+        "We are working on a new project now.",
+        rule,
+      ),
+      T(
+        "Grafia na pista",
+        "Corrija a grafia: She is runing near the school.",
+        "She is running near the school.",
+        "Run dobra n antes de -ing.",
+      ),
+      X(
+        "Cena de almoço",
+        "Ele está preparando o almoço agora. Use make lunch now.",
+        "He is making lunch now.",
+        rule,
+      ),
+      C(
+        "Equipe em movimento",
+        "Qual frase descreve corretamente o grupo esperando?",
+        "They are waiting outside.",
+        [
+          "They is waiting outside.",
+          "They are wait outside.",
+          "They waiting outside.",
+        ],
+        rule,
+      ),
+      B(
+        "Carta em andamento",
+        "Use write com -ing: I am ___ a letter to my aunt.",
+        "writing",
+        "Write perde o e final.",
+      ),
+      C(
+        "Recado do irmão",
+        "Qual ação o irmão está fazendo agora?",
+        "He is washing the dishes.",
+        ["He is watching a film.", "He is making tea.", "He is sleeping."],
+        "A ação explicitada é lavar a louça.",
+        "I am reading in my room. My brother is washing the dishes. Our parents are walking outside.",
+      ),
+      O(
+        "Pausa na viagem",
+        "Monte o que ela está fazendo junto à janela.",
+        "She is sitting near the window.",
+        rule,
+      ),
+      T(
+        "Mudança de sujeito",
+        "Troque apenas We por I: We are learning English this week.",
+        "I am learning English this week.",
+        "I pede am; learning permanece.",
+      ),
+      X(
+        "Chuva no bairro",
+        "Está chovendo agora. Use it e rain now.",
+        "It is raining now.",
+        rule,
+      ),
+      C(
+        "Concordância do professor",
+        "Escolha a descrição correta do momento.",
+        "The teacher is speaking to a student.",
+        [
+          "The teacher are speaking to a student.",
+          "The teacher is speaks to a student.",
+          "The teacher speaking to a student.",
+        ],
+        rule,
+      ),
+      B(
+        "Carro no sinal",
+        "Use stop com -ing: The car is ___ at the light.",
+        "stopping",
+        "Stop dobra p: stopping.",
+      ),
+      T(
+        "Verbo base indevido",
+        "Corrija: You are read a story now.",
+        "You are reading a story now.",
+        "Depois de are, a ação em andamento usa reading.",
+      ),
+    ],
+  );
