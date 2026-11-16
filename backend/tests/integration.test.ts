@@ -816,7 +816,33 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
     .body;
 
   const text =
-    "Every morning, Emma visits a small garden near her house. The garden has yellow flowers and a tall green tree. Today, she meets her friend Ben at the gate. Ben has a red bag with two apples and a book. They sit under the tree and talk about their favorite animals. A small bird lands near them. Emma puts some water in a bowl for the bird. After a quiet morning, the friends walk home together. They are happy and want to visit the garden again.";
+    "Every morning, Emma visits a small garden near her house. The garden has yellow flowers and a tall green tree. Today, she meets her friend Ben at the gate. Ben has a red bag with two apples and a book. They sit under the tree and talk about their favorite animals. A small bird lands near them. Emma puts some water in a bowl for the bird. Ben opens his book and shows Emma pictures of birds. They find a picture of the same bird. It has a small yellow head and brown wings. After a quiet morning, the friends walk home together. They are happy and want to visit the garden again.";
+  const questions = [
+    {
+      kind: "main_idea",
+      promptEn: "What do Emma and Ben do?",
+      referenceAnswerPtBr: "Eles visitam um jardim e observam um pássaro.",
+      evidenceEn:
+        "They sit under the tree and talk about their favorite animals.",
+    },
+    {
+      kind: "detail",
+      promptEn: "What is in Ben's bag?",
+      referenceAnswerPtBr: "Duas maçãs e um livro.",
+      evidenceEn: "Ben has a red bag with two apples and a book.",
+    },
+    {
+      kind: "evidence",
+      promptEn: "Does Emma help the bird? Find a sentence that shows this.",
+      referenceAnswerPtBr: "Sim, ela oferece água.",
+      evidenceEn: "Emma puts some water in a bowl for the bird.",
+    },
+  ];
+  const answers = [
+    { questionId: "q1", answer: "Eles visitam um jardim.", evidence: "" },
+    { questionId: "q2", answer: "Two apples and a book.", evidence: "" },
+    { questionId: "q3", answer: "Sim.", evidence: questions[2].evidenceEn },
+  ];
   const feedback = {
     understanding: "partial",
     feedbackPtBr:
@@ -826,6 +852,11 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
     misunderstoodIdeasPtBr: [],
     referenceSummaryPtBr:
       "Emma encontra Ben no jardim. Eles conversam, observam um pássaro e voltam felizes para casa.",
+    questionFeedback: answers.map((a) => ({
+      questionId: a.questionId,
+      isCorrect: true,
+      feedbackPtBr: "Sua resposta corresponde ao texto.",
+    })),
   };
   const previousFetch = globalThis.fetch;
   const previousEnabled = config.aiEnabled;
@@ -842,6 +873,7 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
         text,
         "O servidor usa o texto persistido, não um texto do cliente.",
       );
+      assert.deepEqual(context.studentAnswers, answers);
       if (rejectAssessment)
         return new Response(
           JSON.stringify({
@@ -858,6 +890,8 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
       );
     }
     assert.equal(body.response_format.json_schema.name, "reading");
+    assert.equal(context.level, "A1");
+    assert.equal(context.approximateWords, 150);
     return new Response(
       JSON.stringify({
         choices: [
@@ -866,6 +900,7 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
               content: JSON.stringify({
                 title: "A Morning in the Garden",
                 text,
+                questions,
               }),
             },
           },
@@ -881,7 +916,15 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
     ).body;
     assert.equal(passage.content, text);
     assert.equal(passage.level, "A1");
+    assert.equal(passage.word_count, text.split(/\s+/).length);
+    assert(passage.word_count >= 100 && passage.word_count <= 200);
     assert(!("lesson_id" in passage));
+    assert.equal(passage.questions.length, 3);
+    assert(
+      passage.questions.every(
+        (q: any) => !("referenceAnswerPtBr" in q) && !("evidenceEn" in q),
+      ),
+    );
     assert(
       (await readingAgent.get("/api/readings").expect(200)).body.some(
         (p: any) => p.id === passage.id,
@@ -891,21 +934,26 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
       "Eu entendi que Emma e Ben foram a um jardim e viram um pássaro.";
     await readingAgent
       .post("/api/readings/" + passage.id + "/draft")
-      .send({ interpretation })
+      .send({ interpretation, answers })
       .expect(200);
     const restored = (
       await readingAgent.get("/api/readings/" + passage.id).expect(200)
     ).body;
     assert.equal(restored.draft_interpretation, interpretation);
+    assert.deepEqual(restored.draft_answers, answers);
     assert.equal(calls, 1, "Salvar rascunho não chama a IA.");
     const attemptId = randomUUID();
+    await readingAgent
+      .post("/api/readings/" + passage.id + "/interpretations")
+      .send({ attemptId, interpretation })
+      .expect(400);
     await readingAgent
       .post("/api/readings/" + passage.id + "/interpretations")
       .send({ attemptId, interpretation, text: "Texto adulterado" })
       .expect(400);
     const failed = await readingAgent
       .post("/api/readings/" + passage.id + "/interpretations")
-      .send({ attemptId, interpretation })
+      .send({ attemptId, interpretation, answers })
       .expect(502);
     assert.match(failed.body.error, /interpretação foi salva/);
     const saved = (
@@ -918,14 +966,21 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
     const evaluated = (
       await readingAgent
         .post("/api/readings/" + passage.id + "/interpretations")
-        .send({ attemptId, interpretation })
+        .send({ attemptId, interpretation, answers })
         .expect(200)
     ).body;
-    assert.deepEqual(evaluated.feedback, feedback);
+    assert.deepEqual(evaluated.feedback, {
+      ...feedback,
+      questionFeedback: feedback.questionFeedback.map((q, i) => ({
+        ...q,
+        referenceAnswerPtBr: questions[i].referenceAnswerPtBr,
+        evidenceEn: questions[i].evidenceEn,
+      })),
+    });
     const callsAfterSuccess = calls;
     await readingAgent
       .post("/api/readings/" + passage.id + "/interpretations")
-      .send({ attemptId, interpretation })
+      .send({ attemptId, interpretation, answers })
       .expect(200);
     assert.equal(
       calls,
@@ -934,7 +989,7 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
     );
     await readingAgent
       .post("/api/readings/" + passage.id + "/interpretations")
-      .send({ attemptId, interpretation: "Outra resposta diferente." })
+      .send({ attemptId, interpretation: "Outra resposta diferente.", answers })
       .expect(409);
     const current = (
       await readingAgent.get("/api/readings/" + passage.id).expect(200)
@@ -1008,6 +1063,323 @@ test("leitura livre persiste texto, rascunho e interpretação sem avançar o cu
     globalThis.fetch = previousFetch;
     config.aiEnabled = previousEnabled;
     await readingAgent.post("/api/auth/logout").send({}).expect(200);
+  }
+});
+
+test("leitura adapta dificuldade, varia formatos e revisa vocabulário com privacidade e idempotência", async () => {
+  const { config } = await import("../src/config.js");
+  const { evaluateReading } = await import("../src/reading/service.js");
+  const username = "reading_adaptive_" + Date.now();
+  await createUser(username, password);
+  const [user] = await rows("SELECT id FROM users WHERE username=?", [
+    username,
+  ]);
+  const { newToken, tokenHash } = await import("../src/auth/service.js");
+  async function authenticatedReader(id: number) {
+    const token = newToken();
+    await pool.execute(
+      "INSERT INTO auth_sessions(token_hash,user_id,expires_at) VALUES (?,?,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY))",
+      [tokenHash(token), id],
+    );
+    return request.agent(app).set("Cookie", `english_session=${token}`);
+  }
+  const client = await authenticatedReader(user.id);
+  const text =
+    "Every morning, Emma visits a small garden near her house. The garden has yellow flowers and a tall green tree. Today, she meets her friend Ben at the gate. Ben has a red bag with two apples and a book. They sit under the tree and talk about their favorite animals. A small bird lands near them. Emma puts some water in a bowl for the bird. Ben opens his book and shows Emma pictures of birds. They find a picture of the same bird. It has a small yellow head and brown wings. After a quiet morning, the friends walk home together. They are happy and want to visit the garden again.";
+  const questions = [
+    {
+      kind: "main_idea",
+      promptEn: "What do the friends do?",
+      referenceAnswerPtBr: "Eles visitam um jardim.",
+      evidenceEn:
+        "They sit under the tree and talk about their favorite animals.",
+    },
+    {
+      kind: "detail",
+      promptEn: "What color are the flowers?",
+      referenceAnswerPtBr: "Amarelas.",
+      evidenceEn: "The garden has yellow flowers and a tall green tree.",
+    },
+    {
+      kind: "evidence",
+      promptEn: "How does Emma help the bird? Find the sentence.",
+      referenceAnswerPtBr: "Ela oferece água.",
+      evidenceEn: "Emma puts some water in a bowl for the bird.",
+    },
+  ];
+  const answers = questions.map((q, i) => ({
+    questionId: `q${i + 1}`,
+    answer: q.referenceAnswerPtBr,
+    evidence: q.kind === "evidence" ? q.evidenceEn : "",
+  }));
+  const interpretation =
+    "Os amigos vão ao jardim e Emma oferece água a um pássaro.";
+  const complete = {
+    understanding: "complete",
+    feedbackPtBr: "Você compreendeu as informações do texto.",
+    understoodCorrectlyPtBr: ["Os amigos visitam um jardim."],
+    missingIdeasPtBr: [],
+    misunderstoodIdeasPtBr: [],
+    referenceSummaryPtBr: "Emma e Ben visitam um jardim e observam um pássaro.",
+    questionFeedback: answers.map((a) => ({
+      questionId: a.questionId,
+      isCorrect: true,
+      feedbackPtBr: "Você identificou a informação correta.",
+    })),
+  };
+  const previousFetch = globalThis.fetch;
+  const previousEnabled = config.aiEnabled;
+  const contexts: any[] = [];
+  let malformed = false;
+  config.aiEnabled = true;
+  globalThis.fetch = async (_url, init) => {
+    const body = JSON.parse(String(init?.body));
+    const context = JSON.parse(body.messages[1].content);
+    const isPassage = body.response_format.json_schema.name === "reading";
+    if (isPassage) contexts.push(context);
+    const data = isPassage
+      ? { title: "A Morning in the Garden", text, questions }
+      : {
+          ...complete,
+          questionFeedback: context.questions.length
+            ? malformed
+              ? [
+                  complete.questionFeedback[0],
+                  complete.questionFeedback[0],
+                  complete.questionFeedback[0],
+                ]
+              : complete.questionFeedback
+            : [],
+        };
+    return new Response(
+      JSON.stringify({
+        choices: [{ message: { content: JSON.stringify(data) } }],
+        usage: { cost: 0 },
+      }),
+      { headers: { "Content-Type": "application/json" } },
+    );
+  };
+  try {
+    const passages: any[] = [];
+    for (let i = 0; i < 3; i++) {
+      const passage = (
+        await client.post("/api/readings/generate").send({}).expect(201)
+      ).body;
+      passages.push(passage);
+      await client
+        .post(`/api/readings/${passage.id}/interpretations`)
+        .send({ attemptId: randomUUID(), interpretation, answers })
+        .expect(200);
+      if (i === 0) {
+        // Different attempts on the same passage must not count as distinct readings.
+        await evaluateReading(
+          user.id,
+          passage.id,
+          randomUUID(),
+          interpretation,
+          answers as any,
+        );
+        await evaluateReading(
+          user.id,
+          passage.id,
+          randomUUID(),
+          interpretation,
+          answers as any,
+        );
+        assert.equal(
+          (await client.get("/api/readings/profile").expect(200)).body
+            .difficulty,
+          1,
+        );
+      }
+    }
+    assert.equal(
+      (await client.get("/api/readings/profile").expect(200)).body.difficulty,
+      2,
+    );
+    assert.equal(new Set(contexts.map((c) => c.textType)).size, 3);
+
+    const vocabularyBody = {
+      passageId: passages[0].id,
+      term: "small garden",
+      meaningPtBr: "pequeno jardim",
+    };
+    await client
+      .post("/api/readings/vocabulary")
+      .send({ ...vocabularyBody, term: "spaceship" })
+      .expect(400);
+    const saved = (
+      await client
+        .post("/api/readings/vocabulary")
+        .send(vocabularyBody)
+        .expect(200)
+    ).body;
+    assert.equal(saved.total, 1);
+    assert.equal(saved.dueCount, 1);
+    assert.match(saved.items[0].context_en, /small garden/);
+    const duplicate = (
+      await client
+        .post("/api/readings/vocabulary")
+        .send({ ...vocabularyBody, term: "SMALL GARDEN" })
+        .expect(200)
+    ).body;
+    assert.equal(duplicate.total, 1);
+    const card = duplicate.items[0];
+    const review = {
+      reviewId: randomUUID(),
+      version: card.review_version,
+      answer: "pequeno jardim",
+      remembered: true,
+    };
+    const reviewed = (
+      await client
+        .post(`/api/readings/vocabulary/${card.id}/reviews`)
+        .send(review)
+        .expect(200)
+    ).body;
+    assert.equal(reviewed.items[0].review_version, 1);
+    assert.equal(reviewed.dueCount, 0);
+    assert.equal(
+      (
+        await client
+          .post(`/api/readings/vocabulary/${card.id}/reviews`)
+          .send(review)
+          .expect(200)
+      ).body.items[0].review_version,
+      1,
+    );
+    await client
+      .post(`/api/readings/vocabulary/${card.id}/reviews`)
+      .send({ ...review, reviewId: randomUUID() })
+      .expect(409);
+    await client
+      .post(`/api/readings/vocabulary/${card.id}/reviews`)
+      .send({ ...review, remembered: false })
+      .expect(409);
+    await client
+      .post("/api/readings/vocabulary")
+      .send(vocabularyBody)
+      .expect(200);
+    assert.equal(
+      (await client.get("/api/readings/vocabulary").expect(200)).body.dueCount,
+      0,
+      "Salvar a mesma palavra não reinicia o calendário.",
+    );
+    await pool.execute(
+      "UPDATE reading_vocabulary SET next_review_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 DAY) WHERE id=?",
+      [card.id],
+    );
+    const forgotten = (
+      await client
+        .post(`/api/readings/vocabulary/${card.id}/reviews`)
+        .send({
+          reviewId: randomUUID(),
+          version: 1,
+          answer: "Não lembro.",
+          remembered: false,
+        })
+        .expect(200)
+    ).body.items[0];
+    assert.equal(forgotten.streak, 0);
+    assert.equal(forgotten.review_version, 2);
+    const [schedule] = await rows(
+      "SELECT TIMESTAMPDIFF(HOUR,UTC_TIMESTAMP(),next_review_at) hours FROM reading_vocabulary WHERE id=?",
+      [card.id],
+    );
+    assert(schedule.hours >= 23 && schedule.hours <= 24);
+
+    const next = (
+      await client.post("/api/readings/generate").send({}).expect(201)
+    ).body;
+    assert.equal(next.difficulty, 2);
+    assert.equal(contexts.at(-1).difficulty, 2);
+    assert(contexts.at(-1).focusVocabulary.includes("small garden"));
+    assert(
+      !contexts
+        .slice(0, 3)
+        .map((c) => c.textType)
+        .includes(contexts.at(-1).textType),
+    );
+
+    // Reject malformed grading without losing the student's answers, then retry.
+    const attemptId = randomUUID();
+    malformed = true;
+    await assert.rejects(
+      evaluateReading(
+        user.id,
+        next.id,
+        attemptId,
+        interpretation,
+        answers as any,
+      ),
+      /não avaliou todas as perguntas/,
+    );
+    assert.deepEqual(
+      (await client.get(`/api/readings/${next.id}`).expect(200)).body
+        .draft_answers,
+      answers,
+    );
+    malformed = false;
+    await evaluateReading(
+      user.id,
+      next.id,
+      attemptId,
+      interpretation,
+      answers as any,
+    );
+
+    // A legacy passage keeps its original interpretation-only workflow.
+    const legacyId = randomUUID();
+    const [origin] = await rows(
+      "SELECT generation_id FROM reading_passages WHERE id=?",
+      [passages[0].id],
+    );
+    await pool.execute(
+      "INSERT INTO reading_passages(id,user_id,generation_id,title,content,theme,word_count,model) VALUES (?,?,?,?,?,?,?,?)",
+      [
+        legacyId,
+        user.id,
+        origin.generation_id,
+        "An Older Reading",
+        text,
+        "jardim",
+        text.split(/\s+/).length,
+        "test",
+      ],
+    );
+    assert.deepEqual(
+      (await client.get(`/api/readings/${legacyId}`).expect(200)).body
+        .questions,
+      [],
+    );
+    await client
+      .post(`/api/readings/${legacyId}/interpretations`)
+      .send({ attemptId: randomUUID(), interpretation })
+      .expect(200);
+
+    const otherName = "reading_vocabulary_owner_" + Date.now();
+    await createUser(otherName, password);
+    const [otherUser] = await rows("SELECT id FROM users WHERE username=?", [
+      otherName,
+    ]);
+    const other = await authenticatedReader(otherUser.id);
+    assert.equal(
+      (await other.get("/api/readings/vocabulary").expect(200)).body.total,
+      0,
+    );
+    await other
+      .post("/api/readings/vocabulary")
+      .send(vocabularyBody)
+      .expect(404);
+    await other
+      .post(`/api/readings/vocabulary/${card.id}/reviews`)
+      .send({ ...review, reviewId: randomUUID() })
+      .expect(404);
+    await other.post("/api/auth/logout").send({}).expect(200);
+  } finally {
+    globalThis.fetch = previousFetch;
+    config.aiEnabled = previousEnabled;
+    await client.post("/api/auth/logout").send({}).expect(200);
   }
 });
 

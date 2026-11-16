@@ -329,28 +329,42 @@ test("seleção preserva prioridade, evita famílias repetidas e permite revisã
 });
 
 test("leitura independente valida tamanho do texto e campos obrigatórios", () => {
-  assert(
-    readingPassageSchema.safeParse({
-      title: "A New Garden",
-      text: Array(60).fill("garden").join(" "),
-    }).success,
-  );
+  const questions = ["main_idea", "detail", "evidence"].map((kind) => ({
+    kind,
+    promptEn: "What is in the text?",
+    referenceAnswerPtBr: "Um jardim.",
+    evidenceEn: "garden",
+  }));
+  for (const words of [100, 150, 200])
+    assert(
+      readingPassageSchema.safeParse({
+        title: "A New Garden",
+        text: `  ${Array(words).fill("garden").join(" \n\t ")}  `,
+        questions,
+      }).success,
+      `Textos com ${words} palavras devem ser aceitos.`,
+    );
   assert(
     !readingPassageSchema.safeParse({
       title: "A New Garden",
       text: "Too short.",
+      questions,
     }).success,
   );
+  for (const words of [99, 201])
+    assert(
+      !readingPassageSchema.safeParse({
+        title: "A New Garden",
+        text: Array(words).fill("garden").join(" "),
+        questions,
+      }).success,
+      `Textos com ${words} palavras devem ser rejeitados.`,
+    );
   assert(
     !readingPassageSchema.safeParse({
       title: "A New Garden",
-      text: Array(251).fill("garden").join(" "),
-    }).success,
-  );
-  assert(
-    !readingPassageSchema.safeParse({
-      title: "A New Garden",
-      text: Array(60).fill("garden").join(" "),
+      text: Array(150).fill("garden").join(" "),
+      questions,
       lessonId: 3,
     }).success,
   );

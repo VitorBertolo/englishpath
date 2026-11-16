@@ -2,6 +2,8 @@
 
 Plataforma pessoal de inglês em português: Angular 22 + Express/TypeScript + MariaDB. O fluxo inicial funciona sem OpenRouter. Não há recursos de voz.
 
+A prática de [Leitura](docs/reading-practice.md) inclui textos de 100 a 200 palavras, três perguntas de compreensão, vocabulário pessoal com revisões espaçadas e adaptação gradual dos próximos textos.
+
 ## Repositório e atualizações
 
 Repositório: [VitorBertolo/englishpath](https://github.com/VitorBertolo/englishpath). A branch principal é `main`. A versão inicial é `1.0.0`, identificada pela tag anotada `v1.0.0`.
@@ -129,9 +131,11 @@ Endpoints autenticados: `POST /api/exams` com `lessonId`, `GET /api/exams/:id`, 
 
 ## Leitura independente com IA
 
-Abra **Leitura** e clique em **Gerar texto aleatório**. O sistema sorteia um tema e pede à IA um texto original em inglês simples, nível A1, com cerca de 100 palavras. Os temas incluem viagens, natureza, cotidiano, histórias, hobbies e curiosidades, com variação dos temas recentes.
+Abra **Leitura** e clique em **Gerar próximo texto**. O sistema sorteia um tema e pede à IA um texto original de 100 a 200 palavras, com meta de 150. A prática começa em A1 e adapta gradualmente a dificuldade até A2 conforme avaliações de textos distintos. Histórias, diálogos, e-mails e mensagens se alternam, evitando os formatos e temas mais recentes.
 
-Depois de ler, escreva no campo **O que você entendeu do texto?**, em português ou inglês. Você pode **Salvar rascunho** ou enviar em **Avaliar minha interpretação**. A avaliação se concentra na compreensão: o que foi entendido corretamente, ideias omitidas, possíveis mal-entendidos e um resumo em português para comparar. A gramática da sua resposta não recebe uma nota nesta prática de leitura.
+Depois de ler, escreva no campo **O que você entendeu do texto?** e responda às três perguntas, em português ou inglês. Uma delas pede um trecho em inglês que comprove sua resposta. Você pode **Salvar rascunho** ou enviar em **Avaliar minha interpretação**. A avaliação considera a interpretação e cada resposta, com referências para comparar. A gramática não recebe uma nota nesta prática. Textos antigos continuam com interpretação livre.
+
+No painel **Meu vocabulário**, salve expressões do texto com seu significado em português. A revisão pede que você escreva o que lembra antes de revelar a anotação e se autoavaliar. As revisões são espaçadas; expressões que precisam de reforço também orientam a geração dos próximos textos. Consulte as [regras de perguntas, revisão e adaptação](docs/reading-practice.md).
 
 Textos, rascunhos e interpretações ficam salvos no MariaDB, em `reading_passages` e `reading_attempts`. A lista **Minhas leituras** permite voltar aos textos anteriores. Antes de solicitar uma avaliação externa, a interpretação já é persistida. Se a IA falhar, você pode tentar a correção novamente sem perder o texto; repetir uma requisição já concluída não faz outra chamada à IA.
 
@@ -183,14 +187,14 @@ A geração de leitura e a avaliação da interpretação estão integradas à i
 
 Verificações mais recentes no Windows/Node 24 e em um banco MariaDB de testes separado:
 
-- 35 testes unitários: correção, domínio, revisão, diversidade de situações e formatos nas 15 lições, Present Continuous, apoios, propostas de escrita, validação de feedback sem nota, contrações, compatibilidade do OpenRouter, leitura, múltiplas lacunas, seleção de provas, pontuação parcial e nota mínima.
-- Sete cenários de integração em banco MariaDB separado: preservação de histórico e provas abertas; fluxo de estudo; prática e provas das 15 lições; escrita e apoios com bloqueio, rascunho, versões, privacidade, seed idempotente e falha/retomada de feedback; correção IA com falhas simuladas; leitura independente; provas com reprovação/aprovação e retomada. A IA é simulada, sem chamadas externas ou custos reais.
+- 41 testes unitários: correção, domínio, revisão, diversidade de situações e formatos nas 15 lições, Present Continuous, apoios, propostas de escrita, validação de feedback sem nota, contrações, compatibilidade do OpenRouter, leitura com perguntas e evidências, adaptação de dificuldade, revisão de vocabulário, múltiplas lacunas, seleção de provas, pontuação parcial e nota mínima.
+- Oito cenários de integração em banco MariaDB separado: preservação de histórico e provas abertas; fluxo de estudo; prática e provas das 15 lições; escrita e apoios com bloqueio, rascunho, versões, privacidade, seed idempotente e falha/retomada de feedback; correção IA com falhas simuladas; leitura independente; adaptação, formatos e revisão de vocabulário; provas com reprovação/aprovação e retomada. A IA é simulada, sem chamadas externas ou custos reais.
 - Build TypeScript do backend e build de produção Angular.
 - Resposta HTTP da aplicação e healthcheck conectado ao MariaDB.
 - Verificação HTTP do build compilado: HTML, bundle Angular, fallback de rotas, login, dashboard e logout, sem criar tentativas de estudo.
 - Auditoria npm sem vulnerabilidades conhecidas na versão instalada.
 
-Na configuração atual da Hostinger, também foram executados migrations, seed e a verificação HTTP do build compilado. São 20 tabelas após `007_curriculum_activities.sql`, com 7 etapas, 2 disponíveis, 5 módulos, 15 lições, 30 habilidades, 450 exercícios de prática, 360 questões de prova ativas e 88 palavras e expressões. Há ainda dez apoios com 30 questões e sete propostas de escrita, das quais duas pertencem às etapas disponíveis. As 324 questões antigas permanecem arquivadas. As verificações do banco de estudos não criaram respostas ou aprovações fictícias; os testes completos usam somente banco separado.
+Na configuração atual da Hostinger, também foram executados migrations, seed e a verificação HTTP do build compilado. São 22 tabelas após `008_reading_practice.sql`, com 7 etapas, 2 disponíveis, 5 módulos, 15 lições, 30 habilidades, 450 exercícios de prática, 360 questões de prova ativas e 88 palavras e expressões. Há ainda dez apoios com 30 questões e sete propostas de escrita, das quais duas pertencem às etapas disponíveis. As 324 questões antigas permanecem arquivadas. As verificações do banco de estudos não criaram respostas ou aprovações fictícias; os testes completos usam somente banco separado.
 
 A verificação visual automatizada da etapa 02 foi interrompida pelo controle de navegador, que não conseguiu confirmar a URL da janela no Windows. A interface compila, mas não foi validada visualmente em desktop/mobile. Não foram feitos novos testes ao vivo de OpenRouter ou Docker nesta etapa.
 

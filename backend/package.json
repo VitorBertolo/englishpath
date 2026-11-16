@@ -12,7 +12,7 @@
     "db:seed": "tsx src/scripts/seed.ts",
     "setup:user": "tsx src/scripts/user.ts",
     "bootstrap:local": "tsx src/scripts/bootstrap-local.ts",
-    "test": "node --import tsx --test tests/unit.test.ts tests/ai-client.test.ts tests/exam-rules.test.ts",
+    "test": "node --import tsx --test tests/unit.test.ts tests/ai-client.test.ts tests/exam-rules.test.ts tests/reading-rules.test.ts",
     "test:integration": "node --import tsx --test tests/integration.test.ts"
   },
   "dependencies": {

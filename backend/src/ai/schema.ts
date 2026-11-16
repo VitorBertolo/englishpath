@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { canonicalAnswer, evaluateAnswer } from "../correction/evaluate.js";
+import { normalizeReadingText } from "../reading/rules.js";
 export const correctionSchema = z
   .object({
     isCorrect: z.boolean(),
@@ -93,15 +94,43 @@ export const readingPassageSchema = z
   .object({
     title: z.string().trim().min(3).max(180),
     text: z.string().trim().min(120).max(6000),
+    questions: z
+      .array(
+        z
+          .object({
+            kind: z.enum(["main_idea", "detail", "evidence"]),
+            promptEn: z.string().trim().min(5).max(500),
+            referenceAnswerPtBr: z.string().trim().min(2).max(700),
+            evidenceEn: z.string().trim().min(3).max(1500),
+          })
+          .strict(),
+      )
+      .length(3),
   })
   .strict()
   .superRefine((passage, ctx) => {
     const words = passage.text.split(/\s+/).filter(Boolean).length;
-    if (words < 40 || words > 250)
+    if (words < 100 || words > 200)
       ctx.addIssue({
         code: "custom",
-        message: "O texto deve ter entre 40 e 250 palavras.",
+        message: "O texto deve ter entre 100 e 200 palavras.",
       });
+    if (new Set(passage.questions.map((q) => q.kind)).size !== 3)
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Inclua uma pergunta de cada tipo: ideia principal, detalhe e evidência.",
+      });
+    for (const question of passage.questions)
+      if (
+        !normalizeReadingText(passage.text).includes(
+          normalizeReadingText(question.evidenceEn),
+        )
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "A evidência de cada pergunta deve ser um trecho do texto.",
+        });
   });
 
 export const readingInterpretationSchema = z
@@ -114,6 +143,19 @@ export const readingInterpretationSchema = z
     referenceSummaryPtBr: z.string().min(10).max(2500),
   })
   .strict();
+export const readingAssessmentSchema = readingInterpretationSchema.extend({
+  questionFeedback: z
+    .array(
+      z
+        .object({
+          questionId: z.enum(["q1", "q2", "q3"]),
+          isCorrect: z.boolean(),
+          feedbackPtBr: z.string().trim().min(5).max(1000),
+        })
+        .strict(),
+    )
+    .max(3),
+});
 export const writingFeedbackSchema = z
   .object({
     feedbackPtBr: z.string().min(10).max(2500),

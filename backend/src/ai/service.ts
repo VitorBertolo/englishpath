@@ -6,7 +6,7 @@ import {
   correctionSchema,
   generationSchema,
   readingPassageSchema,
-  readingInterpretationSchema,
+  readingAssessmentSchema,
   writingFeedbackSchema,
 } from "./schema.js";
 import { OpenRouterClient, AiRequestError } from "./client.js";
@@ -109,6 +109,6 @@ export const generateExercises = (userId: number, context: unknown) =>
 export const generateReading = (userId: number, context: unknown) =>
   request(userId, "reading", readingPassageSchema, context);
 export const assessReading = (userId: number, context: unknown) =>
-  request(userId, "reading_feedback", readingInterpretationSchema, context);
+  request(userId, "reading_feedback", readingAssessmentSchema, context);
 export const assessWriting = (userId: number, context: unknown) =>
   request(userId, "writing_feedback", writingFeedbackSchema, context);

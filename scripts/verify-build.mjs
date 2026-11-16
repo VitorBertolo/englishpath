@@ -11,6 +11,7 @@ try {
   const bundle = home.text.match(/src="(main-[^"]+\.js)"/)[1];
   await agent.get("/" + bundle).expect(200);
   await agent.get("/licao/1").expect(200);
+  await agent.get("/leitura").expect(200);
   const health = await agent.get("/api/health").expect(200);
   assert.equal(health.body.database, "MariaDB");
   await agent
@@ -45,10 +46,32 @@ try {
   ).body;
   assert.equal(support.content.questions.length, 3);
   assert(support.content.questions.every((q) => !("accepted_answers" in q)));
+  const readingProfile = (await agent.get("/api/readings/profile").expect(200))
+    .body;
+  assert(readingProfile.difficulty >= 1 && readingProfile.difficulty <= 4);
+  assert(["A1", "A2"].includes(readingProfile.level));
+  const readingVocabulary = (
+    await agent.get("/api/readings/vocabulary").expect(200)
+  ).body;
+  assert(Array.isArray(readingVocabulary.items));
+  assert(readingVocabulary.total >= readingVocabulary.dueCount);
+  const readings = (await agent.get("/api/readings").expect(200)).body;
+  if (readings.length) {
+    const passage = (
+      await agent.get("/api/readings/" + readings[0].id).expect(200)
+    ).body;
+    assert([0, 3].includes(passage.questions.length));
+    assert(
+      passage.questions.every(
+        (q) => !("referenceAnswerPtBr" in q) && !("evidenceEn" in q),
+      ),
+    );
+    assert(Array.isArray(passage.draft_answers));
+  }
   await agent.get("/atividade/writing-s1-v1").expect(200);
   await agent.post("/api/auth/logout").send({}).expect(200);
   console.log(
-    "Build compilado verificado: HTML, bundles, rotas, MariaDB, login, dashboard, nove lições da etapa 02, Present Continuous, apoios, tarefas de escrita e logout. Nenhuma tentativa de estudo foi criada.",
+    "Build compilado verificado: HTML, bundles, rotas, MariaDB, login, dashboard, etapa 02, apoios, escrita, leitura adaptativa, vocabulário e logout. Nenhuma tentativa de estudo foi criada.",
   );
 } finally {
   await pool.end();

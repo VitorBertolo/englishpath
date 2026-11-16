@@ -4,6 +4,18 @@ import { DatePipe } from "@angular/common";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Api } from "../core/api";
 import { Icon } from "../shared/icon";
+import { ReadingVocabulary } from "./reading-vocabulary";
+
+interface QuestionAnswer {
+  questionId: string;
+  answer: string;
+  evidence: string;
+}
+interface ReadingQuestion {
+  id: string;
+  kind: string;
+  promptEn: string;
+}
 
 interface ReadingFeedback {
   understanding: "complete" | "partial" | "limited";
@@ -12,10 +24,18 @@ interface ReadingFeedback {
   missingIdeasPtBr: string[];
   misunderstoodIdeasPtBr: string[];
   referenceSummaryPtBr: string;
+  questionFeedback?: {
+    questionId: string;
+    isCorrect: boolean;
+    feedbackPtBr: string;
+    referenceAnswerPtBr: string;
+    evidenceEn: string;
+  }[];
 }
 interface ReadingAttempt {
   id: string;
   interpretation: string;
+  answers: QuestionAnswer[];
   status: string;
   feedback: ReadingFeedback | null;
   error_message: string | null;
@@ -26,6 +46,8 @@ interface ReadingSummary {
   title: string;
   theme: string;
   level: string;
+  difficulty: number;
+  text_type: string;
   word_count: number;
   created_at: string;
   latest_status: string | null;
@@ -33,21 +55,20 @@ interface ReadingSummary {
 interface Passage extends ReadingSummary {
   content: string;
   draft_interpretation: string | null;
+  draft_answers: QuestionAnswer[];
+  questions: ReadingQuestion[];
   attempts: ReadingAttempt[];
 }
 
 @Component({
   standalone: true,
-  imports: [FormsModule, DatePipe, Icon],
+  imports: [FormsModule, DatePipe, Icon, ReadingVocabulary],
   template: `
     <div class="page-heading">
       <div>
         <span class="eyebrow">LEIA, DESCUBRA, ENTENDA</span>
         <h1>Uma nova história para ler<span class="green">.</span></h1>
-        <p>
-          Textos em inglês, temas surpresa e um espaço para contar o que você
-          entendeu.
-        </p>
+        <p>Leia em inglês, responda às perguntas e relembre seu vocabulário.</p>
       </div>
       <button
         class="button primary"
@@ -55,7 +76,7 @@ interface Passage extends ReadingSummary {
         (click)="generate()"
       >
         <app-icon name="spark" />{{
-          generating() ? "Criando seu texto…" : "Gerar texto aleatório"
+          generating() ? "Criando seu texto…" : "Gerar próximo texto"
         }}
       </button>
     </div>
@@ -71,6 +92,18 @@ interface Passage extends ReadingSummary {
     @if (loading()) {
       <div class="loading-state">Abrindo seu espaço de leitura…</div>
     } @else {
+      @if (profile(); as learning) {
+        <div class="learning-profile" role="status">
+          <span class="badge">Próxima leitura: {{ learning.label }}</span>
+          <p>O desafio acompanha sua compreensão em diferentes leituras.</p>
+          @if (learning.focusVocabulary.length) {
+            <p>
+              Expressões para reencontrar:
+              <span lang="en">{{ learning.focusVocabulary.join(", ") }}</span>.
+            </p>
+          }
+        </div>
+      }
       <div class="reading-workspace">
         <div class="reading-main">
           @if (passage(); as p) {
@@ -78,14 +111,28 @@ interface Passage extends ReadingSummary {
               <div class="section-top">
                 <span class="badge"
                   >{{ p.level }} · {{ p.word_count }} palavras</span
-                ><span class="small muted">Prática independente do curso</span>
+                ><span class="small muted"
+                  >{{ textTypeLabels[p.text_type] || "História" }} · Prática
+                  independente</span
+                >
               </div>
               <span class="eyebrow">{{ p.theme }}</span>
               <h2 lang="en">{{ p.title }}</h2>
-              <div class="passage-content" lang="en">{{ p.content }}</div>
+              <div
+                class="passage-content"
+                lang="en"
+                (mouseup)="captureTerm($event)"
+                (keyup)="captureTerm($event)"
+              >
+                {{ p.content }}
+              </div>
               <p class="reading-hint">
                 <app-icon name="leaf" />Leia no seu ritmo. Tente reconhecer
                 palavras e conectar as ideias antes de continuar.
+              </p>
+              <p class="small muted">
+                Selecione uma palavra ou expressão para preenchê-la no painel
+                “Meu vocabulário”.
               </p>
             </article>
             <section class="panel interpretation-panel">
@@ -108,21 +155,80 @@ interface Passage extends ReadingSummary {
                 placeholder="Eu entendi que…"
               ></textarea>
               <div class="draft-status">
-                <span role="status">{{ draftState() }}</span
-                ><span>{{ interpretation().length }} / 5000</span>
+                <span role="status">{{ draftState() }}</span><span
+                  >{{ interpretation().length }} / 5000</span
+                >
               </div>
+              @if (p.questions.length) {
+                <div class="comprehension-questions">
+                  <h3>Confira sua compreensão</h3>
+                  <p class="small muted">
+                    Responda em português ou inglês. Consulte o texto quando
+                    precisar.
+                  </p>
+                  @for (
+                    question of p.questions;
+                    track question.id;
+                    let i = $index
+                  ) {
+                    <div class="comprehension-question">
+                      <label class="field-label" [for]="question.id" lang="en"
+                        >{{ i + 1 }}. {{ question.promptEn }}</label
+                      >
+                      <textarea
+                        [id]="question.id"
+                        [name]="question.id"
+                        [ngModel]="answerFor(question.id).answer"
+                        (ngModelChange)="
+                          setAnswer(question.id, 'answer', $event)
+                        "
+                        maxlength="1000"
+                        rows="2"
+                        [disabled]="busy()"
+                        placeholder="Sua resposta…"
+                      ></textarea>
+                      @if (question.kind === "evidence") {
+                        <label
+                          class="field-label"
+                          [for]="question.id + '-evidence'"
+                          >Copie o trecho em inglês que comprova sua
+                          resposta</label
+                        >
+                        <textarea
+                          [id]="question.id + '-evidence'"
+                          [name]="question.id + '-evidence'"
+                          [ngModel]="answerFor(question.id).evidence"
+                          (ngModelChange)="
+                            setAnswer(question.id, 'evidence', $event)
+                          "
+                          maxlength="1000"
+                          rows="2"
+                          [disabled]="busy()"
+                          placeholder="Trecho do texto…"
+                        ></textarea>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="small muted">
+                  Este texto foi salvo antes das perguntas de compreensão. Gere
+                  uma nova leitura para praticar com perguntas.
+                </p>
+              }
               <div class="interpretation-actions">
                 <button
                   class="button secondary"
                   [disabled]="busy() || !dirty()"
                   (click)="saveDraft()"
                 >
-                  {{ saving() ? "Salvando…" : "Salvar rascunho" }}</button
-                ><button
+                  {{
+                    saving() ? "Salvando…" : "Salvar rascunho"
+                  }}</button><button
                   class="button primary"
                   [disabled]="
                     busy() ||
-                    interpretation().trim().length < 5 ||
+                    !answersReady() ||
                     !aiEnabled() ||
                     alreadyEvaluated()
                   "
@@ -183,6 +289,25 @@ interface Passage extends ReadingSummary {
                     </ul>
                   </div>
                 }
+                @if (f.questionFeedback?.length) {
+                  <div class="feedback-section">
+                    <h3>Suas respostas às perguntas</h3>
+                    @for (item of f.questionFeedback; track item.questionId) {
+                      <div class="question-result">
+                        <strong>{{ questionPrompt(item.questionId) }}</strong>
+                        <span class="badge">{{
+                          item.isCorrect ? "Você compreendeu" : "Vale reler"
+                        }}</span>
+                        <p>{{ item.feedbackPtBr }}</p>
+                        <p>
+                          <strong>Resposta de referência:</strong>
+                          {{ item.referenceAnswerPtBr }}
+                        </p>
+                        <blockquote lang="en">{{ item.evidenceEn }}</blockquote>
+                      </div>
+                    }
+                  </div>
+                }
                 <div class="reference-summary">
                   <h3>Um resumo para comparar</h3>
                   <p>{{ f.referenceSummaryPtBr }}</p>
@@ -201,12 +326,20 @@ interface Passage extends ReadingSummary {
                           : a.status === "failed"
                             ? "Salva · correção pendente"
                             : "Avaliação pendente"
-                      }}</span
-                      ><time>{{
+                      }}</span><time>{{
                         a.created_at | date: "dd/MM/yyyy · HH:mm"
                       }}</time>
                     </summary>
                     <p class="saved-interpretation">{{ a.interpretation }}</p>
+                    @for (answer of a.answers; track answer.questionId) {
+                      <p>
+                        <strong>{{ questionPrompt(answer.questionId) }}</strong
+                        ><br />{{ answer.answer }}
+                      </p>
+                      @if (answer.evidence) {
+                        <blockquote lang="en">{{ answer.evidence }}</blockquote>
+                      }
+                    }
                     @if (a.feedback) {
                       <p>{{ a.feedback.feedbackPtBr }}</p>
                       <p>
@@ -227,9 +360,9 @@ interface Passage extends ReadingSummary {
               ><span class="eyebrow">UM TEMA SURPRESA A CADA LEITURA</span>
               <h2>Uma história nova espera por você.</h2>
               <p>
-                Clique em “Gerar texto aleatório” para receber um texto curto em
-                inglês. Depois, escreva o que entendeu e receba comentários da
-                IA.
+                Clique em “Gerar próximo texto” para receber uma leitura em
+                inglês de 100 a 200 palavras. Conte o que entendeu, responda às
+                três perguntas e guarde expressões para revisar.
               </p>
               <div class="reading-steps">
                 <span>01 · Leia em inglês</span
@@ -239,44 +372,52 @@ interface Passage extends ReadingSummary {
             </section>
           }
         </div>
-        <aside class="panel reading-history">
-          <div class="section-top">
-            <h2>Minhas leituras</h2>
-            <span class="badge">{{ items().length }}</span>
-          </div>
-          <p class="small muted">
-            Os textos e suas interpretações ficam salvos para você voltar quando
-            quiser.
-          </p>
-          @for (item of items(); track item.id) {
-            <button
-              class="reading-history-item"
-              [class.selected]="passage()?.id === item.id"
-              [attr.aria-pressed]="passage()?.id === item.id"
-              [disabled]="busy()"
-              (click)="open(item.id)"
-            >
-              <span class="small"
-                >{{ item.created_at | date: "dd/MM/yyyy" }} ·
-                {{ item.word_count }} palavras</span
-              ><strong lang="en">{{ item.title }}</strong
-              ><small
-                >{{
-                  item.latest_status === "evaluated"
-                    ? "Interpretação avaliada"
-                    : item.latest_status === "failed"
-                      ? "Interpretação salva"
-                      : "Continue sua leitura"
-                }}<app-icon name="chevron"
-              /></small>
-            </button>
-          } @empty {
-            <div class="empty-inline">
-              <app-icon name="book" /><span
-                >Sua primeira leitura vai aparecer aqui.</span
-              >
+        <aside class="reading-sidebar">
+          <app-reading-vocabulary
+            [passageId]="passage()?.id ?? null"
+            [suggestedTerm]="selectedTerm()"
+            [disabled]="busy()"
+            (changed)="refreshProfile()"
+          />
+          <section class="panel reading-history">
+            <div class="section-top">
+              <h2>Minhas leituras</h2>
+              <span class="badge">{{ items().length }}</span>
             </div>
-          }
+            <p class="small muted">
+              Os textos e suas interpretações ficam salvos para você voltar
+              quando quiser.
+            </p>
+            @for (item of items(); track item.id) {
+              <button
+                class="reading-history-item"
+                [class.selected]="passage()?.id === item.id"
+                [attr.aria-pressed]="passage()?.id === item.id"
+                [disabled]="busy()"
+                (click)="open(item.id)"
+              >
+                <span class="small"
+                  >{{ item.created_at | date: "dd/MM/yyyy" }} ·
+                  {{ item.word_count }} palavras</span
+                ><strong lang="en">{{ item.title }}</strong
+                ><small
+                  >{{
+                    item.latest_status === "evaluated"
+                      ? "Interpretação avaliada"
+                      : item.latest_status === "failed"
+                        ? "Interpretação salva"
+                        : "Continue sua leitura"
+                  }}<app-icon name="chevron"
+                /></small>
+              </button>
+            } @empty {
+              <div class="empty-inline">
+                <app-icon name="book" /><span
+                  >Sua primeira leitura vai aparecer aqui.</span
+                >
+              </div>
+            }
+          </section>
         </aside>
       </div>
     }
@@ -291,6 +432,56 @@ interface Passage extends ReadingSummary {
       }
       .reading-main {
         min-width: 0;
+      }
+      .reading-sidebar {
+        display: grid;
+        gap: 23px;
+        min-width: 0;
+      }
+      .learning-profile {
+        margin-bottom: 23px;
+        padding: 16px 20px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #edf3e9;
+      }
+      .learning-profile p {
+        font-size: 12px;
+        margin: 8px 0 0;
+      }
+      .comprehension-questions {
+        border-top: 1px solid var(--border);
+        padding-top: 24px;
+        margin-bottom: 24px;
+      }
+      .comprehension-question {
+        margin-top: 20px;
+      }
+      .interpretation-panel .comprehension-question textarea {
+        min-height: 80px;
+        margin: 8px 0 14px;
+      }
+      .question-result {
+        border-top: 1px solid var(--border);
+        margin-top: 18px;
+        padding-top: 18px;
+      }
+      .question-result > strong {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+      .question-result p {
+        font-size: 13px;
+        margin: 12px 0;
+      }
+      blockquote {
+        margin: 12px 0;
+        padding-left: 14px;
+        border-left: 2px solid #b7c9a6;
+        line-height: 1.8;
+        font-size: 13px;
+        overflow-wrap: anywhere;
       }
       .free-reading {
         padding: 34px;
@@ -355,8 +546,6 @@ interface Passage extends ReadingSummary {
         line-height: 1.8;
       }
       .reading-history {
-        position: sticky;
-        top: 24px;
         padding: 23px;
       }
       .reading-history-item {
@@ -562,6 +751,15 @@ export class Reading {
   items = signal<ReadingSummary[]>([]);
   passage = signal<Passage | null>(null);
   interpretation = signal("");
+  answers = signal<QuestionAnswer[]>([]);
+  selectedTerm = signal("");
+  profile = signal<{ label: string; focusVocabulary: string[] } | null>(null);
+  textTypeLabels: Record<string, string> = {
+    story: "História",
+    dialogue: "Diálogo",
+    email: "E-mail",
+    message: "Mensagens",
+  };
   loading = signal(true);
   generating = signal(false);
   evaluating = signal(false);
@@ -576,7 +774,8 @@ export class Reading {
   dirty = computed(
     () =>
       !!this.passage() &&
-      this.interpretation() !== (this.passage()?.draft_interpretation ?? ""),
+      (this.interpretation() !== (this.passage()?.draft_interpretation ?? "") ||
+        !this.sameAnswers(this.answers(), this.passage()?.draft_answers ?? [])),
   );
   draftState = computed(() =>
     this.saving()
@@ -590,7 +789,8 @@ export class Reading {
       this.passage()?.attempts.some(
         (a) =>
           a.status === "evaluated" &&
-          a.interpretation === this.interpretation().trim(),
+          a.interpretation === this.interpretation().trim() &&
+          this.sameAnswers(a.answers, this.answers()),
       ) ?? false,
   );
   retryable = computed(
@@ -598,13 +798,25 @@ export class Reading {
       this.passage()?.attempts.some(
         (a) =>
           a.status !== "evaluated" &&
-          a.interpretation === this.interpretation().trim(),
+          a.interpretation === this.interpretation().trim() &&
+          this.sameAnswers(a.answers, this.answers()),
       ) ?? false,
   );
   feedback = computed(
     () =>
       this.passage()?.attempts.find((a) => a.status === "evaluated")
         ?.feedback ?? null,
+  );
+  answersReady = computed(
+    () =>
+      this.interpretation().trim().length >= 5 &&
+      (this.passage()?.questions ?? []).every((q) => {
+        const answer = this.answerFor(q.id);
+        return (
+          !!answer.answer.trim() &&
+          (q.kind !== "evidence" || !!answer.evidence.trim())
+        );
+      }),
   );
   feedbackTitles = {
     complete: "Você captou muito bem o texto.",
@@ -618,12 +830,16 @@ export class Reading {
     this.loading.set(true);
     this.error.set("");
     try {
-      const [config, items] = await Promise.all([
+      const [config, items, profile] = await Promise.all([
         this.api.get("/config"),
         this.api.get<ReadingSummary[]>("/readings"),
+        this.api.get<{ label: string; focusVocabulary: string[] }>(
+          "/readings/profile",
+        ),
       ]);
       this.aiEnabled.set(config.aiEnabled);
       this.items.set(items);
+      this.profile.set(profile);
       const id = this.route.snapshot.queryParamMap.get("texto") ?? items[0]?.id;
       if (id) await this.open(id);
     } catch (e) {
@@ -635,11 +851,63 @@ export class Reading {
   private select(p: Passage) {
     this.passage.set(p);
     this.interpretation.set(p.draft_interpretation ?? "");
+    this.answers.set(p.draft_answers ?? []);
+    this.selectedTerm.set("");
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { texto: p.id },
       replaceUrl: true,
     });
+  }
+  answerFor(id: string): QuestionAnswer {
+    return (
+      this.answers().find((a) => a.questionId === id) ?? {
+        questionId: id,
+        answer: "",
+        evidence: "",
+      }
+    );
+  }
+  setAnswer(id: string, field: "answer" | "evidence", value: string) {
+    const updated = { ...this.answerFor(id), [field]: value };
+    this.answers.update((answers) => [
+      ...answers.filter((a) => a.questionId !== id),
+      updated,
+    ]);
+  }
+  private sameAnswers(a: QuestionAnswer[], b: QuestionAnswer[]) {
+    const normalized = (answers: QuestionAnswer[]) =>
+      [...answers]
+        .filter((q) => q.answer.trim() || q.evidence.trim())
+        .map((q) => ({
+          questionId: q.questionId,
+          answer: q.answer.trim(),
+          evidence: q.evidence.trim(),
+        }))
+        .sort((x, y) => x.questionId.localeCompare(y.questionId));
+    return JSON.stringify(normalized(a)) === JSON.stringify(normalized(b));
+  }
+  questionPrompt(id: string) {
+    return this.passage()?.questions.find((q) => q.id === id)?.promptEn ?? id;
+  }
+  captureTerm(event: Event) {
+    const selection = window.getSelection();
+    const element = event.currentTarget as HTMLElement;
+    if (
+      !selection ||
+      !element.contains(selection.anchorNode) ||
+      !element.contains(selection.focusNode)
+    )
+      return;
+    const term = selection.toString().replace(/\s+/g, " ").trim();
+    if (term && term.length <= 120) this.selectedTerm.set(term);
+  }
+  async refreshProfile() {
+    try {
+      this.profile.set(await this.api.get("/readings/profile"));
+    } catch {
+      /* The saved practice remains available even if the profile cannot refresh. */
+    }
   }
   private async refreshList() {
     this.items.set(await this.api.get<ReadingSummary[]>("/readings"));
@@ -660,10 +928,14 @@ export class Reading {
   private async persistDraft() {
     if (!this.passage() || !this.dirty()) return;
     const text = this.interpretation();
+    const answers = this.answers();
     await this.api.post("/readings/" + this.passage()!.id + "/draft", {
       interpretation: text,
+      answers,
     });
-    this.passage.update((p) => (p ? { ...p, draft_interpretation: text } : p));
+    this.passage.update((p) =>
+      p ? { ...p, draft_interpretation: text, draft_answers: answers } : p,
+    );
   }
   async saveDraft() {
     if (this.busy()) return;
@@ -692,21 +964,37 @@ export class Reading {
     }
   }
   async evaluate() {
-    if (this.busy() || !this.passage() || this.alreadyEvaluated()) return;
+    if (
+      this.busy() ||
+      !this.passage() ||
+      !this.answersReady() ||
+      this.alreadyEvaluated()
+    )
+      return;
     this.evaluating.set(true);
     this.error.set("");
     const id = this.passage()!.id;
     const interpretation = this.interpretation().trim();
+    const answers = this.answers().map((a) => ({
+      ...a,
+      answer: a.answer.trim(),
+      evidence: a.evidence.trim(),
+    }));
     const pending = this.passage()!.attempts.find(
-      (a) => a.status !== "evaluated" && a.interpretation === interpretation,
+      (a) =>
+        a.status !== "evaluated" &&
+        a.interpretation === interpretation &&
+        this.sameAnswers(a.answers, answers),
     );
     try {
       await this.api.post("/readings/" + id + "/interpretations", {
         attemptId: pending?.id ?? crypto.randomUUID(),
         interpretation,
+        answers,
       });
       this.select(await this.api.get<Passage>("/readings/" + id));
       await this.refreshList();
+      await this.refreshProfile();
     } catch (e) {
       this.error.set(this.api.message(e));
       try {
