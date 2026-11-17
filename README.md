@@ -80,13 +80,13 @@ Para conexão remota com TLS, use `DB_SSL=true` e, se necessário, `DB_SSL_CA_FI
 ## Usar o curso
 
 1. Faça login e abra **Meu percurso**.
-2. Escolha uma das lições liberadas nas etapas 01 e 02 e leia explicação e exemplos.
+2. Escolha uma das lições liberadas nas etapas 01, 02 e 03 e leia explicação e exemplos.
 3. Selecione **Praticar esta lição**. Uma sessão anterior ativa será retomada primeiro.
 4. Responda, verifique e leia a explicação. Avance pelo botão; em campos de texto, Enter verifica e depois avança.
 5. Use **Salvar e sair** para voltar depois. Fechar o navegador também preserva as respostas já enviadas.
 6. Consulte **Meu histórico**, **Revisão inteligente**, **Leitura** e **Vocabulário**.
 
-Cada uma das 15 lições disponíveis tem **30 exercícios de prática**, com situações próprias de viagens, compras, alimentação, serviços, tecnologia, natureza, lazer e vida em casa. Os enunciados incluem múltiplas lacunas com seleção e escrita, interpretação de avisos e diálogos, correção de informações, construção de frases e transformações. Um mesmo caso não é reapresentado apenas com outro formato. Cada sessão apresenta até 20 perguntas, prioriza o conteúdo ainda não praticado e alterna formatos e temas quando há alternativas. Continue em outras sessões para cobrir o catálogo inteiro. Revisões de conteúdos já iniciados podem entrar na sequência.
+Cada uma das 24 lições disponíveis tem **30 exercícios de prática**, com situações próprias de viagens, compras, alimentação, serviços, tecnologia, natureza, lazer e vida em casa. Os enunciados incluem múltiplas lacunas com seleção e escrita, interpretação de avisos e diálogos, correção de informações, construção de frases e transformações. Um mesmo caso não é reapresentado apenas com outro formato. Cada sessão apresenta até 20 perguntas, prioriza o conteúdo ainda não praticado e alterna formatos e temas quando há alternativas. Continue em outras sessões para cobrir o catálogo inteiro. Revisões de conteúdos já iniciados podem entrar na sequência.
 
 ## Etapa 02: Simple Present + Present Continuous
 
@@ -105,13 +105,28 @@ A aprovação na prova da lição 06 libera a lição 07. Cada prova seguinte li
 
 Para atualizar uma instalação existente, execute `npm run db:migrate` e `npm run db:seed`. Esses comandos já foram aplicados ao banco configurado nesta instalação.
 
+## Etapa 03: Perguntas + Palavras essenciais
+
+A terceira etapa usa To Be, Simple Present e Present Continuous para ir além das respostas sim/não: **Where do you study?**, **Why does she work here?** e **What are you doing now?**. São quatro módulos e nove lições:
+
+| Módulo | Lições |
+| --- | --- |
+| De respostas curtas a novas informações | 16. What/who/which com To Be; 17. Where/when/what time com To Be e do/does |
+| Motivos, frequência e o momento atual | 18. Why/because, how, how often e idade; 19. Perguntas no Continuous e contraste com hábitos |
+| Apontar, identificar e localizar | 20. This/that/these/those, whose e posse; 21. There is/are e preposições de lugar |
+| Quantidades e conversas do cotidiano | 22. How many/how much e unidades; 23. Some/any, disponibilidade e preços; 24. Diálogos e esclarecimentos |
+
+São **270 práticas**, **216 questões no banco de provas**, **48 palavras e expressões**, quatro apoios com 12 questões e a produção **Uma conversa para conhecer alguém**. A escrita propõe um diálogo com perguntas relacionadas, rotina e ação atual, localização ou quantidade e um pedido de esclarecimento. Rascunhos, versões e autorrevisão continuam disponíveis sem IA.
+
+A aprovação na prova 15 libera a lição 16, mantendo o mínimo de 85% e a liberação de uma lição por vez. Os apoios acompanham as lições 20–23; a produção escrita é liberada ao chegar à lição 24. Histórico, respostas, aprovações e provas abertas anteriores são preservados. Para atualizar, execute `npm run db:migrate`, `npm run db:seed` e `npm run build`; reinicie o servidor quando usar o build compilado. A etapa não precisa de nova migration. Detalhes em [docs/stage3.md](docs/stage3.md).
+
 ## Produção escrita e conteúdos de apoio
 
-No percurso, cada etapa tem uma proposta de escrita. Nas duas etapas disponíveis, **Minha apresentação** e **Minha rotina e meu momento** permitem escrever em inglês sem um texto pronto para copiar, salvar rascunhos, entregar versões e revisar critérios. A atividade é liberada quando o aluno chega à última lição da etapa. A IA pode oferecer feedback formativo após a entrega; sem IA, os textos e a autorrevisão continuam salvos. A escrita tem acompanhamento próprio e não concede nota ou aprovação nas provas.
+No percurso, cada etapa tem uma proposta de escrita. Nas três etapas disponíveis, **Minha apresentação**, **Minha rotina e meu momento** e **Uma conversa para conhecer alguém** permitem escrever em inglês sem um texto pronto para copiar, salvar rascunhos, entregar versões e revisar critérios. A atividade é liberada quando o aluno chega à última lição da etapa. A IA pode oferecer feedback formativo após a entrega; sem IA, os textos e a autorrevisão continuam salvos. A escrita tem acompanhamento próprio e não concede nota ou aprovação nas provas.
 
 Use **Salvar rascunho** antes de fechar ou recarregar a página. Navegar por uma rota interna também salva alterações no texto. A autorrevisão é preservada em cada versão entregue. O histórico permite voltar a uma versão e reescrevê-la sem apagar as anteriores.
 
-São **dez conteúdos de apoio** nas etapas 01 e 02, com explicações, exemplos e **30 questões curtas adicionais**: artigos, possessivos, plurais, números, idade, horários, preposições de lugar e tempo, expressões de interação e marcadores do presente. Eles aparecem nas lições relacionadas e na seção **Conteúdos de apoio** do percurso. A sequência das etapas futuras está planejada, com prática ainda bloqueada. Veja [docs/curriculum-evolution.md](docs/curriculum-evolution.md).
+São **14 conteúdos de apoio** nas etapas 01–03, com explicações, exemplos e **42 questões curtas adicionais**: artigos, possessivos, plurais, números, idade, horários, preposições, expressões de interação, marcadores do presente, demonstrativos, existência, quantidades, some/any e preços. Eles aparecem nas lições relacionadas e na seção **Conteúdos de apoio** do percurso. A sequência das etapas futuras está planejada, com prática ainda bloqueada. Veja [docs/curriculum-evolution.md](docs/curriculum-evolution.md).
 
 O catálogo da etapa 01 foi renovado por completo. Os exercícios antigos estão arquivados, com enunciados, referências e tentativas preservados no histórico. Os percentuais de prática consideram os 180 exercícios novos; acertos antigos não são transferidos para questões ainda não respondidas. Aprovações e lições já liberadas continuam válidas. Sessões de prática antigas são encerradas com aviso e podem dar lugar a uma nova sessão; provas já abertas mantêm seu conteúdo e respostas, e a tentativa seguinte usa o banco novo.
 
@@ -187,16 +202,18 @@ A geração de leitura e a avaliação da interpretação estão integradas à i
 
 Verificações mais recentes no Windows/Node 24 e em um banco MariaDB de testes separado:
 
-- 41 testes unitários: correção, domínio, revisão, diversidade de situações e formatos nas 15 lições, Present Continuous, apoios, propostas de escrita, validação de feedback sem nota, contrações, compatibilidade do OpenRouter, leitura com perguntas e evidências, adaptação de dificuldade, revisão de vocabulário, múltiplas lacunas, seleção de provas, pontuação parcial e nota mínima.
-- Oito cenários de integração em banco MariaDB separado: preservação de histórico e provas abertas; fluxo de estudo; prática e provas das 15 lições; escrita e apoios com bloqueio, rascunho, versões, privacidade, seed idempotente e falha/retomada de feedback; correção IA com falhas simuladas; leitura independente; adaptação, formatos e revisão de vocabulário; provas com reprovação/aprovação e retomada. A IA é simulada, sem chamadas externas ou custos reais.
+- 43 testes unitários: correção, domínio, revisão, diversidade de situações e formatos nas 24 lições, perguntas no presente, demonstrativos, existência, quantidades e preços, Present Continuous, apoios, propostas de escrita, validação de feedback sem nota, contrações, compatibilidade do OpenRouter, leitura com perguntas e evidências, adaptação de dificuldade, revisão de vocabulário, múltiplas lacunas, seleção de provas, pontuação parcial e nota mínima.
+- Oito cenários de integração em banco MariaDB separado: preservação de histórico e provas abertas; fluxo de estudo; prática e provas das 24 lições, passagem 15 → 16, apoios 20–23, escrita na lição 24 e preservação da prova aberta da etapa 02; escrita e apoios com bloqueio, rascunho, versões, privacidade, seed idempotente e falha/retomada de feedback; correção IA com falhas simuladas; leitura independente; adaptação, formatos e revisão de vocabulário; provas com reprovação/aprovação e retomada. A IA é simulada, sem chamadas externas ou custos reais.
 - Build TypeScript do backend e build de produção Angular.
 - Resposta HTTP da aplicação e healthcheck conectado ao MariaDB.
 - Verificação HTTP do build compilado: HTML, bundle Angular, fallback de rotas, login, dashboard e logout, sem criar tentativas de estudo.
 - Auditoria npm sem vulnerabilidades conhecidas na versão instalada.
 
-Na configuração atual da Hostinger, também foram executados migrations, seed e a verificação HTTP do build compilado. São 22 tabelas após `008_reading_practice.sql`, com 7 etapas, 2 disponíveis, 5 módulos, 15 lições, 30 habilidades, 450 exercícios de prática, 360 questões de prova ativas e 88 palavras e expressões. Há ainda dez apoios com 30 questões e sete propostas de escrita, das quais duas pertencem às etapas disponíveis. As 324 questões antigas permanecem arquivadas. As verificações do banco de estudos não criaram respostas ou aprovações fictícias; os testes completos usam somente banco separado.
+Na configuração atual da Hostinger, também foram executados migrations, seed e a verificação HTTP do build compilado. São 22 tabelas após `008_reading_practice.sql`, com 7 etapas, 3 disponíveis, 9 módulos, 24 lições, 48 habilidades, 720 exercícios de prática, 576 questões de prova ativas e 136 palavras e expressões. Há ainda 14 apoios com 42 questões e sete propostas de escrita, das quais três pertencem às etapas disponíveis. As 324 questões antigas permanecem arquivadas. As verificações do banco de estudos não criaram respostas ou aprovações fictícias; os testes completos usam somente banco separado.
 
-A verificação visual automatizada da etapa 02 foi interrompida pelo controle de navegador, que não conseguiu confirmar a URL da janela no Windows. A interface compila, mas não foi validada visualmente em desktop/mobile. Não foram feitos novos testes ao vivo de OpenRouter ou Docker nesta etapa.
+A verificação visual automatizada das etapas 02 e 03 foi interrompida pelo controle de navegador, que não conseguiu confirmar a URL da janela no Windows. A interface compila, mas não foi validada visualmente em desktop/mobile. Não foram feitos novos testes ao vivo de OpenRouter ou Docker nesta etapa.
+
+Na entrega da etapa 03, os 43 testes unitários, os oito cenários de integração e o build passaram. A integração foi executada em um novo banco local isolado, `curso_ingles_stage3_test`. O seed foi aplicado ao banco configurado da Hostinger, comparando o conteúdo das tabelas de estudo antes e depois: tentativas, sessões, provas, revisões, rascunhos, entregas e leituras permaneceram iguais, assim como os exercícios das etapas 01–02. O smoke test compilado e o healthcheck HTTP também passaram, sem criar respostas de estudo.
 
 O teste de integração exige `TEST_DB_NAME` terminado em `_test`, diferente de `DB_NAME`. É necessário provisionar um banco de testes separado antes de executá-lo. Para fornecer suas credenciais isoladas, copie `.env.test.example` para `.env.test`; esse arquivo privado é lido antes de `.env`. Na entrega da etapa 02, o acesso a `curso_ingles_test` na VPS foi recusado. A integração foi executada no MariaDB local, em `curso_ingles_stage2_test`, usando variáveis de processo e preservando `.env` e o banco de estudos remoto. Os testes não apagam tabelas ou bancos e usam um usuário novo por execução. Não aponte os testes para dados de estudo.
 
@@ -226,8 +243,8 @@ Faça backups periódicos de `curso_ingles_db` com a ferramenta de backup do pro
 
 ## Escopo entregue e próxima tarefa
 
-Etapas 01 e 02: 15 lições com 30 exercícios cada, banco próprio de provas, sete formatos de exercício, 30 habilidades e 88 palavras e expressões. Present Continuous foi antecipado para a etapa 02. Apoios e produção livre complementam as lições com acompanhamento separado. Leitura independente com IA, sessões retomáveis, histórico, dashboard, domínio e revisão espaçada continuam disponíveis. A aprovação em prova libera a próxima lição. Etapas 03–07 têm propostas de escrita e sequência de apoio planejadas; suas lições e práticas permanecem futuras.
+Etapas 01–03: 24 lições com 30 exercícios cada, banco próprio de provas, sete formatos de exercício, 48 habilidades e 136 palavras e expressões. Present Continuous foi antecipado para a etapa 02. Apoios e produção livre complementam as lições com acompanhamento separado. Leitura independente com IA, sessões retomáveis, histórico, dashboard, domínio e revisão espaçada continuam disponíveis. A aprovação em prova libera a próxima lição. Etapas 04–07 têm propostas de escrita e sequência de apoio planejadas; suas lições e práticas permanecem futuras.
 
-Correção e geração via OpenRouter estão implementadas, incluindo leitura independente, avaliação de interpretação e feedback formativo de escrita, com timeout, validação e diagnóstico. A geração de exercícios recebe a etapa real da lição. A chave e o modo JSON foram validados ao vivo na entrega anterior; a disponibilidade depende do provedor. Ainda não há lições das etapas 03–07, tutor por texto ou painel para julgar variações antigas do motor de exercícios. Não há áudio.
+Correção e geração via OpenRouter estão implementadas, incluindo leitura independente, avaliação de interpretação e feedback formativo de escrita, com timeout, validação e diagnóstico. A geração de exercícios recebe a etapa real da lição. A chave e o modo JSON foram validados ao vivo na entrega anterior; a disponibilidade depende do provedor. Ainda não há lições das etapas 04–07, tutor por texto ou painel para julgar variações antigas do motor de exercícios. Não há áudio.
 
 Conclua a verificação visual nos navegadores de desktop e celular quando o controle do navegador estiver disponível. O banco da VPS já está conectado; publicar o backend no EasyPanel permitirá usar o host interno do serviço.

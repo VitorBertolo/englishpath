@@ -22,18 +22,36 @@ try {
     })
     .expect(200);
   const dashboard = await agent.get("/api/progress/dashboard").expect(200);
-  assert(dashboard.body.total >= 450);
+  assert(dashboard.body.total >= 720);
   const course = (await agent.get("/api/stages").expect(200)).body;
   assert.equal(course.stages.find((s) => s.id === 2).available, 1);
   assert.equal(course.modules.filter((m) => m.stage_id === 2).length, 4);
   const stageTwo = course.lessons.filter((l) => l.stage_id === 2);
   assert.equal(stageTwo.length, 9);
   assert(stageTwo.every((l) => l.total >= 30));
+  assert.equal(course.stages.find((s) => s.id === 3).available, 1);
+  assert.equal(course.modules.filter((m) => m.stage_id === 3).length, 4);
+  const stageThree = course.lessons.filter((l) => l.stage_id === 3);
+  assert.equal(stageThree.length, 9);
+  assert(stageThree.every((l) => l.total >= 30));
+  const firstStageThree = (await agent.get("/api/lessons/16").expect(200)).body;
+  assert.equal(firstStageThree.stage_id, 3);
+  assert.equal(firstStageThree.previousLessonId, 15);
   const lesson = (await agent.get("/api/lessons/7").expect(200)).body;
   assert.equal(lesson.stage_id, 2);
   assert.equal(lesson.previousLessonId, 6);
   const vocabulary = (await agent.get("/api/vocabulary").expect(200)).body;
   assert.equal(vocabulary.filter((w) => w.stage_id === 2).length, 48);
+  assert.equal(vocabulary.filter((w) => w.stage_id === 3).length, 48);
+  assert.equal(
+    course.activities.filter((a) => a.stage_id === 3 && a.kind === "support")
+      .length,
+    4,
+  );
+  const stageThreeWriting = (
+    await agent.get("/api/activities/writing-s3-v1").expect(200)
+  ).body;
+  assert.equal(stageThreeWriting.title, "Uma conversa para conhecer alguém");
   assert.equal(course.supportPlan.length, 7);
   assert.equal(course.activities.filter((a) => a.kind === "writing").length, 7);
   const activity = (
@@ -71,7 +89,7 @@ try {
   await agent.get("/atividade/writing-s1-v1").expect(200);
   await agent.post("/api/auth/logout").send({}).expect(200);
   console.log(
-    "Build compilado verificado: HTML, bundles, rotas, MariaDB, login, dashboard, etapa 02, apoios, escrita, leitura adaptativa, vocabulário e logout. Nenhuma tentativa de estudo foi criada.",
+    "Build compilado verificado: HTML, bundles, rotas, MariaDB, login, dashboard, etapas 02 e 03, apoios, escrita, leitura adaptativa, vocabulário e logout. Nenhuma tentativa de estudo foi criada.",
   );
 } finally {
   await pool.end();

@@ -78,7 +78,7 @@ test("cada prova usa contextos distintos e mistura lacunas e construção de fra
     assert(selected.every((q) => q.lesson_id === lesson));
   }
 });
-test("respostas oficiais aprovam as provas das duas etapas sem ambiguidade de pontuação", () => {
+test("respostas oficiais aprovam as provas das três etapas sem ambiguidade de pontuação", () => {
   for (const { id: lesson } of lessons) {
     const selected = selectExamQuestions(
       exercises.filter((e) => e.lesson_id === lesson && e.purpose === "exam"),

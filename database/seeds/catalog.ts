@@ -16,6 +16,20 @@ import {
 } from "./stage2/continuous.js";
 import { continuousQuestions } from "./stage2/continuous-questions.js";
 import { presentContrast } from "./stage2/present-contrast.js";
+import {
+  stageThreeLessons,
+  stageThreeModules,
+  stageThreeVocabulary,
+} from "./stage3/curriculum.js";
+import { identityQuestions } from "./stage3/identity.js";
+import { placeTimeQuestions } from "./stage3/place-time.js";
+import { reasonQuestions } from "./stage3/reasons.js";
+import { currentActionQuestions } from "./stage3/current-actions.js";
+import { demonstrativeExercises } from "./stage3/demonstratives.js";
+import { existenceExercises } from "./stage3/existence.js";
+import { quantityExercises } from "./stage3/quantities.js";
+import { shoppingExercises } from "./stage3/shopping.js";
+import { conversationExercises } from "./stage3/conversations.js";
 export const stages = [
   [
     "Verbo To Be + Pronomes",
@@ -50,6 +64,7 @@ export const modules = [
   { id: 1, stage_id: 1, position: 1, title: "Primeiras frases em inglês" },
   ...stageTwoModules,
   { id: 5, stage_id: 2, position: 4, title: "Da rotina ao que acontece agora" },
+  ...stageThreeModules,
 ];
 const stageOneLessons = [
   {
@@ -135,6 +150,7 @@ export const lessons = [
   ...stageOneLessons.map((l) => ({ ...l, module_id: 1, position: l.id })),
   ...stageTwoLessons,
   ...continuousLessons,
+  ...stageThreeLessons,
 ];
 export type Blank = {
   id: string;
@@ -173,6 +189,15 @@ export const exercises: Exercise[] = [
   ...continuousAffirmatives(),
   ...continuousQuestions(),
   ...presentContrast(),
+  ...identityQuestions(),
+  ...placeTimeQuestions(),
+  ...reasonQuestions(),
+  ...currentActionQuestions(),
+  ...demonstrativeExercises(),
+  ...existenceExercises(),
+  ...quantityExercises(),
+  ...shoppingExercises(),
+  ...conversationExercises(),
 ];
 const stageOneVocabulary = [
   ["I", "eu", "I am ready."],
@@ -227,6 +252,13 @@ export const vocabulary = [
   ...stageTwoVocabulary.map((v, i) => ({
     id: 101 + i,
     stage_id: 2,
+    word: v[0],
+    translation: v[1],
+    example: v[2],
+  })),
+  ...stageThreeVocabulary.map((v, i) => ({
+    id: 201 + i,
+    stage_id: 3,
     word: v[0],
     translation: v[1],
     example: v[2],

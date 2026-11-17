@@ -20,7 +20,7 @@ As explicações e instruções são em português. Exemplos traduzidos e vocabu
 - Cada situação tem identidade própria; as provas usam contextos diferentes da prática.
 - A prática mantém sessões de até 20 questões, retomada, correção com explicação e revisões de conteúdos já iniciados. São necessárias outras sessões para cobrir o banco inteiro.
 - **48 palavras e expressões novas** no vocabulário, com tradução, exemplo e filtro por etapa.
-- A aprovação exige **85%**, conforme a configuração existente. A última prova da etapa 01 libera a lição 07; as provas seguintes liberam uma lição por vez. A prova da lição 12 libera o módulo de Continuous; a lição 15 encerra o conteúdo disponível. A etapa 03 continua futura.
+- A aprovação exige **85%**, conforme a configuração existente. A última prova da etapa 01 libera a lição 07; as provas seguintes liberam uma lição por vez. A prova da lição 12 libera o módulo de Continuous; a prova da lição 15 libera a lição 16 da [etapa 03](stage3.md).
 - Cinco conteúdos de apoio, com 15 questões curtas corrigidas, trabalham números e horários, preposições de tempo, artigo the, expressões de interação e marcadores de rotina ou momento.
 - A produção **Minha rotina e meu momento** é liberada ao chegar à última lição. Ela inclui rascunho, versões entregues, autorrevisão e feedback opcional de IA. Suas estatísticas são separadas das provas.
 
@@ -34,6 +34,6 @@ O percurso consulta os módulos da API. Lição, prova e dashboard mostram a eta
 
 ## Validação
 
-Os testes unitários verificam as 15 lições, os 810 exercícios ativos, referências, alternativas únicas, lacunas, diversidade, seleção e correção de provas, contrações, Continuous e estrutura dos módulos. A integração percorre as duas etapas com bloqueio antes da aprovação, prática, provas e navegação entre etapas, além de persistência e privacidade dos apoios e textos livres.
+Os testes unitários verificam agora as 24 lições e os 1.296 exercícios ativos das três primeiras etapas, incluindo referências, alternativas únicas, lacunas, diversidade, seleção e correção de provas, contrações, Continuous e estrutura dos módulos. A integração percorre as três etapas com bloqueio antes da aprovação, prática, provas e navegação entre etapas, além de persistência e privacidade dos apoios e textos livres.
 
 Os testes completos usam um banco separado terminado em `_test`; nunca geram aprovações fictícias no banco de estudos.

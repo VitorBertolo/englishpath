@@ -105,7 +105,7 @@ export function canonicalAnswer(value: string) {
         })[x]!,
     )
     .replace(
-      /\b(i'm|you're|he's|she's|it's|we're|they're)\b(?=\s+\S)/g,
+      /\b(i'm|you're|he's|she's|it's|we're|they're|there's|what's|who's|where's)\b(?=\s+\S)/g,
       (x) =>
         ({
           "i'm": "i am",
@@ -115,6 +115,10 @@ export function canonicalAnswer(value: string) {
           "it's": "it is",
           "we're": "we are",
           "they're": "they are",
+          "there's": "there is",
+          "what's": "what is",
+          "who's": "who is",
+          "where's": "where is",
         })[x]!,
     );
 }

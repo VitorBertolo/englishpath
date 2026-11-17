@@ -47,6 +47,16 @@ import { Icon } from "../shared/icon";
                   liberada pela aprovação na última prova da etapa 01.
                 </p>
               }
+              @if (s.id === 3) {
+                <p class="stage-intro">
+                  Você já se apresenta, conta rotinas e descreve o que acontece
+                  agora. Amplie essas frases com perguntas para conhecer
+                  pessoas, localizar lugares e objetos, falar de quantidades e
+                  perguntar preços. Ao final, combine o que aprendeu em uma
+                  conversa escrita. A aprovação na última prova da etapa 02
+                  libera a primeira lição.
+                </p>
+              }
               @for (m of modulesFor(s.id); track m.id) {
                 <div class="module-title">
                   MÓDULO {{ ("0" + m.position).slice(-2) }}

@@ -30,9 +30,11 @@ import { Icon } from "../shared/icon";
           <h2>Uma boa base.<br />Um mundo de possibilidades.</h2>
           <p>
             {{
-              d.currentLesson.stage_id === 2
-                ? "Amplie sua base: conte suas rotinas, faça perguntas e fale de hábitos e preferências em inglês."
-                : "Aprenda a se apresentar, descrever o mundo e construir suas primeiras frases em inglês."
+              d.currentLesson.stage_id === 3
+                ? "Use o que já aprendeu para conhecer pessoas, fazer perguntas, localizar lugares e conversar sobre quantidades e preços."
+                : d.currentLesson.stage_id === 2
+                  ? "Amplie sua base: conte suas rotinas, faça perguntas e fale de hábitos e preferências em inglês."
+                  : "Aprenda a se apresentar, descrever o mundo e construir suas primeiras frases em inglês."
             }}
           </p>
           <button class="button light" [disabled]="busy()" (click)="start()">

@@ -132,7 +132,7 @@ test("valida geração de IA e rejeita escolhas ambíguas, lacunas ausentes e or
   );
 });
 test("catálogo contém 30 exercícios de prática e 24 questões de prova por lição", () => {
-  assert.equal(exercises.length, 810);
+  assert.equal(exercises.length, 1296);
   assert.equal(new Set(exercises.map((e) => e.type)).size, 7);
   for (const { id: l } of lessons) {
     assert.equal(
@@ -158,7 +158,7 @@ test("catálogo contém 30 exercícios de prática e 24 questões de prova por l
   }
 });
 
-test("as duas etapas têm situações próprias, temas variados e nenhum caso repetido em outro formato", () => {
+test("as três etapas têm situações próprias, temas variados e nenhum caso repetido em outro formato", () => {
   assert.equal(new Set(exercises.map((e) => e.family)).size, exercises.length);
   const texts = exercises.map((e) => (e.passage ?? "") + " " + e.prompt);
   assert.equal(new Set(texts).size, texts.length);
@@ -207,7 +207,7 @@ test("etapa 2 antecipa Present Continuous depois do Simple Present preservando a
   assert.equal(new Set(exercises.map((e) => e.id)).size, exercises.length);
   assert(
     exercises
-      .filter((e) => e.lesson_id >= 7)
+      .filter((e) => e.lesson_id >= 7 && e.lesson_id <= 15)
       .every(
         (e) =>
           e.id.startsWith("s2-v1-") &&
@@ -220,7 +220,7 @@ test("etapa 2 antecipa Present Continuous depois do Simple Present preservando a
 
 test("apoios têm referências únicas, sequência válida e uma produção livre para cada etapa", () => {
   assert.equal(supportPlan.length, 7);
-  assert.equal(new Set(learningActivities.map((a) => a.id)).size, 17);
+  assert.equal(new Set(learningActivities.map((a) => a.id)).size, 21);
   for (let stage = 1; stage <= 7; stage++)
     assert.equal(
       learningActivities.filter(
@@ -252,6 +252,97 @@ test("apoios têm referências únicas, sequência válida e uma produção livr
     "A escrita não deve fornecer um texto para copiar.",
   );
   assert(writing.content.checklist.length >= 4);
+});
+
+test("etapa 3 amplia as perguntas no presente em quatro módulos, nove lições e quatro apoios", () => {
+  const stageModules = modules.filter((m) => m.stage_id === 3);
+  assert.deepEqual(
+    stageModules.map((m) => m.position),
+    [1, 2, 3, 4],
+  );
+  const stageLessons = lessons.filter((l) =>
+    stageModules.some((m) => m.id === l.module_id),
+  );
+  assert.deepEqual(
+    stageLessons.map((l) => l.id),
+    [16, 17, 18, 19, 20, 21, 22, 23, 24],
+  );
+  assert.deepEqual(
+    stageModules.map(
+      (m) => stageLessons.filter((l) => l.module_id === m.id).length,
+    ),
+    [2, 2, 2, 3],
+  );
+  assert.equal(vocabulary.filter((v) => v.stage_id === 3).length, 48);
+  assert.equal(
+    exercises.filter((e) => e.lesson_id >= 16 && e.purpose === "practice")
+      .length,
+    270,
+  );
+  assert.equal(
+    exercises.filter((e) => e.lesson_id >= 16 && e.purpose === "exam").length,
+    216,
+  );
+  for (const lesson of stageLessons) {
+    assert(lesson.explanation.length > 600);
+    assert(lesson.examples.length >= 4);
+    assert.equal(lesson.skills.length, 2);
+    const items = exercises.filter((e) => e.lesson_id === lesson.id);
+    assert(
+      items.every(
+        (e) =>
+          e.id.startsWith(`s3-v1-l${lesson.id}-`) &&
+          lesson.skills[(e.skill_id % 10) - 1],
+      ),
+    );
+    assert.equal(
+      new Set(items.filter((e) => e.purpose === "practice").map((e) => e.type))
+        .size,
+      7,
+    );
+  }
+  const support = learningActivities.filter(
+    (a) => a.stage_id === 3 && a.kind === "support",
+  );
+  assert.deepEqual(
+    support.map((a) => a.lesson_id),
+    [20, 21, 22, 23],
+  );
+  const writing = learningActivities.find((a) => a.id === "writing-s3-v1")!;
+  assert.equal(writing.lesson_id, null);
+  assert.equal(writing.content.examples.length, 0);
+  assert(writing.content.checklist.length >= 4);
+  assert(writing.content.prompt.includes("agora"));
+});
+
+test("perguntas e existência aceitam contrações sem confundir posse, pessoa ou número", () => {
+  for (const [answer, reference] of [
+    ["What's your name?", "What is your name?"],
+    ["Who's your teacher?", "Who is your teacher?"],
+    ["Where's the library?", "Where is the library?"],
+    ["There's a café here.", "There is a café here."],
+    ["What's she reading?", "What is she reading?"],
+    ["There aren't any apples.", "There are not any apples."],
+  ])
+    assert(evaluateAnswer(answer, [reference]));
+  for (const [answer, reference] of [
+    ["Whose your teacher?", "Who is your teacher?"],
+    ["Who's bag is this?", "Whose bag is this?"],
+    ["There is two books.", "There are two books."],
+    ["How many water do you need?", "How much water do you need?"],
+    ["Where does she works?", "Where does she work?"],
+    ["What do you doing?", "What are you doing?"],
+    ["Yes, there's.", "Yes, there is."],
+  ])
+    assert(!evaluateAnswer(answer, [reference]));
+  assert.equal(
+    deterministicResult("There is a café here.", {
+      type: "transform",
+      accepted_answers: ["There's a café here."],
+      strict_form: true,
+    }),
+    "incorrect",
+  );
 });
 
 test("Continuous preserva ação, auxiliar, pessoa e sentido de rotina ou momento", () => {

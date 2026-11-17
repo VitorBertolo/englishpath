@@ -179,10 +179,11 @@ test("fluxo real MariaDB: autenticação, tentativa, retry, retomada, revisão e
   assert.equal(initial.body.stats.accuracy, null);
   const course = await agent.get("/api/stages").expect(200);
   assert.equal(course.body.stages.length, 7);
-  assert.equal(course.body.lessons.length, 15);
-  assert.equal(course.body.modules.length, 5);
+  assert.equal(course.body.lessons.length, 24);
+  assert.equal(course.body.modules.length, 9);
   assert.equal(course.body.stages[1].available, 1);
-  assert(course.body.stages.slice(2).every((s: any) => !s.available));
+  assert.equal(course.body.stages[2].available, 1);
+  assert(course.body.stages.slice(3).every((s: any) => !s.available));
   const session = (
     await agent.post("/api/study-sessions").send({ lessonId: 1 }).expect(201)
   ).body;
@@ -234,7 +235,7 @@ test("fluxo real MariaDB: autenticação, tentativa, retry, retomada, revisão e
   const [count] = await rows(
     "SELECT COUNT(*) count FROM exercises WHERE active=1 AND source='seed'",
   );
-  assert.equal(count.count, 810);
+  assert.equal(count.count, 1296);
   const [attempts] = await rows(
     "SELECT COUNT(*) count FROM exercise_attempts WHERE user_id=?",
     [userId],
@@ -315,7 +316,7 @@ test("fluxo real MariaDB: autenticação, tentativa, retry, retomada, revisão e
   await agent.get("/api/auth/me").expect(401);
 });
 
-test("as duas etapas preservam a sequência entre módulos e etapas com prática e provas independentes", async () => {
+test("as três etapas preservam a sequência entre módulos e etapas com prática e provas independentes", async () => {
   const username = "full_course_" + Date.now();
   await createUser(username, password);
   const courseAgent = request.agent(app);
@@ -329,13 +330,53 @@ test("as duas etapas preservam a sequência entre módulos e etapas com prática
     .send({ lessonId: 7 })
     .expect(403);
   await courseAgent.post("/api/exams").send({ lessonId: 7 }).expect(403);
+  await courseAgent.get("/api/lessons/16/exercises").expect(403);
+  await courseAgent
+    .post("/api/study-sessions")
+    .send({ lessonId: 16 })
+    .expect(403);
+  await courseAgent.post("/api/exams").send({ lessonId: 16 }).expect(403);
   const stageTwo = (await courseAgent.get("/api/stages/2").expect(200)).body;
   assert.equal(stageTwo.modules.length, 4);
   assert.equal(stageTwo.lessons.length, 9);
+  const stageThree = (await courseAgent.get("/api/stages/3").expect(200)).body;
+  assert.equal(stageThree.available, 1);
+  assert.equal(stageThree.modules.length, 4);
+  assert.equal(stageThree.lessons.length, 9);
+  assert(stageThree.lessons.every((l: any) => !l.isUnlocked));
+  for (const id of [
+    "support-demonstratives-v1",
+    "support-existence-location-v1",
+    "support-quantities-v1",
+    "support-some-any-prices-v1",
+    "writing-s3-v1",
+  ]) {
+    assert.equal(
+      (await courseAgent.get("/api/activities/" + id).expect(200)).body
+        .isUnlocked,
+      false,
+    );
+    await courseAgent
+      .post("/api/activities/" + id + "/draft")
+      .send({ response: "Blocked draft" })
+      .expect(403);
+  }
   const words = (await courseAgent.get("/api/vocabulary").expect(200)).body;
   assert.equal(words.filter((w: any) => w.stage_id === 2).length, 48);
-  for (let lessonId = 1; lessonId <= 15; lessonId++) {
-    if (lessonId < 15)
+  assert.equal(words.filter((w: any) => w.stage_id === 3).length, 48);
+  for (let lessonId = 1; lessonId <= 24; lessonId++) {
+    if ([16, 20, 21, 22, 23, 24].includes(lessonId)) {
+      const activities = (
+        await courseAgent.get("/api/stages").expect(200)
+      ).body.activities.filter((a: any) => a.stage_id === 3);
+      assert.equal(
+        activities.find((a: any) => a.kind === "writing").isUnlocked,
+        lessonId === 24,
+      );
+      for (const support of activities.filter((a: any) => a.kind === "support"))
+        assert.equal(support.isUnlocked, lessonId >= support.lesson_id);
+    }
+    if (lessonId < 24)
       await courseAgent
         .post("/api/exams")
         .send({ lessonId: lessonId + 1 })
@@ -372,7 +413,9 @@ test("as duas etapas preservam a sequência entre módulos e etapas com prática
     if (lessonId >= 7)
       assert(
         session.exercises.every(
-          (e: any) => e.id.startsWith("s2-v1-") || e.lesson_id < lessonId,
+          (e: any) =>
+            e.id.startsWith(lessonId >= 16 ? "s3-v1-" : "s2-v1-") ||
+            e.lesson_id < lessonId,
         ),
       );
     const refs =
@@ -387,9 +430,45 @@ test("as duas etapas preservam a sequência entre módulos e etapas com prática
       .post("/api/study-sessions/" + session.id + "/finish")
       .send({ action: "finish" })
       .expect(200);
+    if (lessonId === 15) {
+      const exam = (
+        await courseAgent.post("/api/exams").send({ lessonId }).expect(201)
+      ).body;
+      await courseAgent
+        .post("/api/exams/" + exam.id + "/answers")
+        .send({
+          exerciseId: exam.questions[0].id,
+          answer: "saved stage two draft",
+        })
+        .expect(200);
+      const [before] = await rows(
+        "SELECT questions,answers,status FROM exam_sessions WHERE id=?",
+        [exam.id],
+      );
+      const previous = (
+        await courseAgent.get("/api/stages").expect(200)
+      ).body.lessons.filter((l: any) => l.id < 15);
+      await seed();
+      const [after] = await rows(
+        "SELECT questions,answers,status FROM exam_sessions WHERE id=?",
+        [exam.id],
+      );
+      assert.deepEqual(
+        after,
+        before,
+        "A extensão preserva a prova aberta ao final da etapa 02.",
+      );
+      const refreshed = (await courseAgent.get("/api/stages").expect(200)).body
+        .lessons;
+      assert.deepEqual(
+        refreshed.filter((l: any) => l.id < 15),
+        previous,
+      );
+      assert.equal(refreshed.find((l: any) => l.id === 16).isUnlocked, false);
+    }
     const passed = await passExam(courseAgent, lessonId);
-    assert.equal(passed.stageId, lessonId <= 6 ? 1 : 2);
-    assert.equal(passed.nextLessonId, lessonId < 15 ? lessonId + 1 : null);
+    assert.equal(passed.stageId, lessonId <= 6 ? 1 : lessonId <= 15 ? 2 : 3);
+    assert.equal(passed.nextLessonId, lessonId < 24 ? lessonId + 1 : null);
   }
   const data = (await courseAgent.get("/api/stages").expect(200)).body;
   assert(
@@ -400,11 +479,67 @@ test("as duas etapas preservam a sequência entre módulos e etapas com prática
   const dashboard = (
     await courseAgent.get("/api/progress/dashboard").expect(200)
   ).body;
-  assert.equal(dashboard.total, 450);
+  assert.equal(dashboard.total, 720);
   assert.equal(
     dashboard.stats.attempts,
-    15,
+    24,
     "Provas não criam tentativas de estudo.",
+  );
+  assert.equal(dashboard.currentLesson.stage_id, 3);
+  const { learningActivities } =
+    await import("../../database/seeds/evolution.js");
+  for (const support of learningActivities.filter(
+    (a) => a.stage_id === 3 && a.kind === "support",
+  )) {
+    const endpoint = "/api/activities/" + support.id;
+    const view = (await courseAgent.get(endpoint).expect(200)).body;
+    assert.equal(view.isUnlocked, true);
+    assert(
+      view.content.questions.every((q: any) => !("accepted_answers" in q)),
+    );
+    const response = JSON.stringify(
+      Object.fromEntries(
+        support.content.questions!.map((q) => [q.id, q.accepted_answers[0]]),
+      ),
+    );
+    const corrected = (
+      await courseAgent
+        .post(endpoint + "/submissions")
+        .send({ submissionId: randomUUID(), response, selfReview: [] })
+        .expect(201)
+    ).body;
+    assert.equal(corrected.submissions[0].feedback.correct, 3);
+  }
+  const writingEndpoint = "/api/activities/writing-s3-v1";
+  const writing = (await courseAgent.get(writingEndpoint).expect(200)).body;
+  assert.equal(writing.isUnlocked, true);
+  const response =
+    "A: What is your name? B: I'm Lia. A: Where do you live? B: Near the school. A: How often do you study here? B: Twice a week. A: What are you doing now? B: I'm reading. There are two books here. A: What does library mean? B: Biblioteca. A: Thank you.";
+  await courseAgent
+    .post(writingEndpoint + "/draft")
+    .send({ response })
+    .expect(200);
+  const payload = {
+    submissionId: randomUUID(),
+    response,
+    selfReview: writing.content.checklist.map(() => true),
+  };
+  await courseAgent
+    .post(writingEndpoint + "/submissions")
+    .send(payload)
+    .expect(201);
+  await seed();
+  const preserved = (await courseAgent.get(writingEndpoint).expect(200)).body;
+  assert.equal(preserved.draft.response, response);
+  assert.equal(preserved.submissions.length, 1);
+  assert.equal(preserved.submissions[0].response, response);
+  assert.deepEqual(
+    (await courseAgent.get("/api/stages")).body.lessons,
+    data.lessons,
+  );
+  assert.equal(
+    (await courseAgent.get("/api/progress/dashboard")).body.stats.attempts,
+    24,
   );
   await courseAgent.post("/api/auth/logout").send({}).expect(200);
 });
@@ -415,11 +550,11 @@ test("apoios e escrita livre persistem versões, respeitam bloqueios e isolam a 
   await createUser(username, password);
   const client = request.agent(app);
   await client.post("/api/auth/login").send({ username, password }).expect(200);
-  const future = (await client.get("/api/activities/writing-s3-v1").expect(200))
+  const future = (await client.get("/api/activities/writing-s4-v1").expect(200))
     .body;
   assert.equal(future.isUnlocked, false);
   await client
-    .post("/api/activities/writing-s3-v1/draft")
+    .post("/api/activities/writing-s4-v1/draft")
     .send({ response: "A future draft." })
     .expect(403);
   await client
